@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import '../styles/Map.css'
@@ -27,6 +27,8 @@ function MapClickHandler({ onMapClick }) {
 function Map({
   selectedLocation,
   startingPoint,
+  routes,
+  selectedRouteId,
   onMapClick,
   onResetLocation,
 }) {
@@ -58,6 +60,16 @@ function Map({
     shadowSize: [41, 41],
   })
 
+  // Orange icon for destination points
+  const destinationIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  })
+
   return (
     <div className="map-container">
       {/* MapContainer creates the map div and initializes Leaflet */}
@@ -78,6 +90,49 @@ function Map({
         {/* MapClickHandler listens for clicks on the map */}
         {/* When user clicks, it calls onMapClick with the coordinates */}
         <MapClickHandler onMapClick={onMapClick} />
+
+        {/* Draw route lines for each generated route */}
+        {/* Each route is a round trip: start → destination → start */}
+        {routes.map((route) => {
+          const isSelected = selectedRouteId === route.id
+          const isBest = route.isBest
+          let lineColor = '#4CAF50'
+          if (isBest) {
+            lineColor = '#FF9800'
+          }
+          if (isSelected) {
+            lineColor = '#FF0000'
+          }
+          const lineWeight = isSelected || isBest ? 4 : 2
+
+          return (
+            <Polyline
+              key={`route-${route.id}`}
+              positions={route.path}
+              color={lineColor}
+              weight={lineWeight}
+              opacity={isSelected || isBest ? 0.8 : 0.4}
+            />
+          )
+        })}
+
+        {/* Show destination markers for each route */}
+        {routes.map((route) => (
+          <Marker
+            key={`dest-${route.id}`}
+            position={[route.destination.lat, route.destination.lng]}
+            icon={destinationIcon}
+          >
+            <Popup>
+              <div>
+                <h3>Route {route.id} Destination</h3>
+                <p>Latitude: {route.destination.lat.toFixed(4)}</p>
+                <p>Longitude: {route.destination.lng.toFixed(4)}</p>
+                <p>Round trip distance: {route.distance} miles</p>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
 
         {/* Show confirmed starting point marker if it exists */}
         {/* Green marker to show this is the official starting point */}

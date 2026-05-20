@@ -1,0 +1,188 @@
+/* RouteList.css - Styles for the route list display */
+
+.route-list-panel {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  width: 320px;
+  max-height: 45vh;
+  overflow-y: auto;
+
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: #333;
+  z-index: 1000;
+}
+
+.route-list-panel h2 {
+  margin: 0 0 15px 0;
+  font-size: 20px;
+  color: #222;
+}
+
+/* Empty state when no routes */
+.empty-state {
+  text-align: center;
+  color: #999;
+  padding: 20px 10px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Routes container */
+.routes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.route-count {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Route list items */
+.route-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.route-item {
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  background: white;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.route-item:hover {
+  border-color: #4CAF50;
+  background: #f9fff9;
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.1);
+}
+
+.route-item.selected {
+  border-color: #FF0000;
+  background: #fff5f5;
+  box-shadow: 0 2px 8px rgba(255, 0, 0, 0.15);
+}
+
+/* Route header with number and distance */
+.route-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.route-header h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #222;
+  font-weight: 600;
+}
+
+.best-label {
+  display: inline-block;
+  margin-top: 4px;
+  margin-left: 6px;
+  padding: 3px 8px;
+  background: #FF9800;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.route-item.best {
+  border-color: #FF9800;
+  background: #fff8e1;
+}
+
+.distance-badge {
+  background: #4CAF50;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.route-item.selected .distance-badge {
+  background: #FF0000;
+}
+
+/* Route details */
+.route-details {
+  font-size: 13px;
+}
+
+.route-details p {
+  margin: 6px 0 0 0;
+  line-height: 1.3;
+}
+
+.route-details strong {
+  color: #333;
+}
+
+.coordinates {
+  color: #666;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.route-description {
+  color: #999;
+  font-size: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .route-list-panel {
+    position: fixed;
+    right: auto;
+    left: 10px;
+    bottom: 10px;
+    width: calc(100% - 20px);
+    max-height: 30vh;
+  }
+}
+
+/* Scrollbar styling */
+.route-list-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.route-list-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.route-list-panel::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.route-list-panel::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
