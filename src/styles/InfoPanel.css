@@ -1,13 +1,8 @@
 /* InfoPanel.css - Styles for the information panel showing selected coordinates */
 
 .info-panel {
-  /* Positioned on the right side of the screen */
-  position: fixed;
-  right: 10px;
-  top: 10px;
-  width: 320px;
-  max-height: 80vh;
-  overflow-y: auto;
+  width: 100%;
+  max-width: 100%;
 
   /* Background and styling */
   background: white;
@@ -52,7 +47,7 @@
   padding: 10px 0;
 }
 
-.coordinates {
+.info-panel .coordinates {
   background: #f5f5f5;
   padding: 12px;
   border-radius: 4px;
@@ -60,12 +55,12 @@
   font-size: 13px;
 }
 
-.coordinates p {
+.info-panel .coordinates p {
   margin: 5px 0;
   line-height: 1.4;
 }
 
-.coordinates strong {
+.info-panel .coordinates strong {
   display: inline-block;
   width: 85px;
 }
@@ -101,7 +96,7 @@
 }
 
 /* Button styles */
-.btn {
+.info-panel .btn {
   width: 100%;
   padding: 10px 15px;
   margin-top: 10px;
@@ -113,44 +108,38 @@
   transition: background-color 0.3s, transform 0.1s;
 }
 
-.btn:hover {
+.info-panel .btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.btn:active {
+.info-panel .btn:active {
   transform: translateY(0);
 }
 
 /* Primary button - for confirming selection */
-.btn-primary {
+.info-panel .btn-primary {
   background: #4CAF50;
   color: white;
 }
 
-.btn-primary:hover {
+.info-panel .btn-primary:hover {
   background: #45a049;
 }
 
 /* Secondary button - for reset */
-.btn-secondary {
+.info-panel .btn-secondary {
   background: #f44336;
   color: white;
 }
 
-.btn-secondary:hover {
+.info-panel .btn-secondary:hover {
   background: #da190b;
 }
 
-/* Mobile responsive - move panel to bottom on small screens */
+/* Mobile responsive */
 @media (max-width: 768px) {
   .info-panel {
-    position: fixed;
-    right: auto;
-    left: 10px;
-    top: auto;
-    bottom: 10px;
-    width: calc(100% - 20px);
-    max-height: 40vh;
+    width: 100%;
   }
 }

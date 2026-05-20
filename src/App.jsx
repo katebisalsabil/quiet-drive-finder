@@ -3,9 +3,16 @@ import Map from './components/Map'
 import InfoPanel from './components/InfoPanel'
 import RouteGenerator from './components/RouteGenerator'
 import RouteList from './components/RouteList'
-import { generateDestinationPoints } from './utils/routeUtils'
+import {
+  ROUTE_COLORS,
+  addRouteQualityScores,
+  buildRouteFromTomTomResponse,
+  generateDestinationPoints,
+} from './utils/routeUtils'
 import { fetchTomTomRoute } from './utils/tomtomApi'
 import './App.css'
+
+const ROUTE_COUNT = 3
 
 function App() {
   // State to store the currently selected location (where user clicked)
@@ -17,8 +24,9 @@ function App() {
   // State to store the generated routes
   const [routes, setRoutes] = useState([])
 
-  // State to track which route is being hovered over
+  // State to track the route selected by click or hover
   const [selectedRouteId, setSelectedRouteId] = useState(null)
+  const [hoveredRouteId, setHoveredRouteId] = useState(null)
 
   // State to track if we are loading routes from TomTom
   const [isGenerating, setIsGenerating] = useState(false)
@@ -29,15 +37,18 @@ function App() {
   // Called when user clicks on the map
   const handleMapClick = (lat, lng) => {
     setSelectedLocation({ lat, lng })
+    setRouteError(null)
   }
 
   // Confirm the selected location as the starting point
   const handleConfirmStartingPoint = () => {
     if (selectedLocation) {
       setStartingPoint(selectedLocation)
+      setSelectedLocation(null)
       setRoutes([])
       setRouteError(null)
       setSelectedRouteId(null)
+      setHoveredRouteId(null)
     }
   }
 
@@ -47,21 +58,24 @@ function App() {
     setStartingPoint(null)
     setRoutes([])
     setSelectedRouteId(null)
+    setHoveredRouteId(null)
     setRouteError(null)
   }
 
   // Generate three real routes using TomTom from start → destination → start
   const handleGenerateRoutes = async (startingPointLocation, radiusMiles) => {
     if (!startingPointLocation) {
+      setRouteError('Please confirm a starting point before generating routes.')
       return
     }
 
     setIsGenerating(true)
     setRouteError(null)
     setSelectedRouteId(null)
+    setHoveredRouteId(null)
     setRoutes([])
 
-    const destinations = generateDestinationPoints(startingPointLocation, radiusMiles, 3)
+    const destinations = generateDestinationPoints(startingPointLocation, radiusMiles, ROUTE_COUNT)
 
     try {
       const routePromises = destinations.map(async (destination, index) => {
@@ -72,59 +86,53 @@ function App() {
         ])
 
         if (!apiResponse.ok) {
-          throw new Error(
-            `TomTom route request failed with status ${apiResponse.status}.`
-          )
+          throw new Error(apiResponse.message || 'TomTom could not calculate one route option.')
         }
 
-        const summary = apiResponse.summary || {}
-        const distanceMeters = summary.lengthInMeters ?? 0
-        const travelTimeSeconds = summary.travelTimeInSeconds ?? 0
-        const trafficDelaySeconds = summary.trafficDelayInSeconds ?? 0
-        const routeShape = apiResponse.routeShape.length
-          ? apiResponse.routeShape
-          : [
-              [startingPointLocation.lat, startingPointLocation.lng],
-              [destination.lat, destination.lng],
-              [startingPointLocation.lat, startingPointLocation.lng],
-            ]
-
-        const distanceMiles = Math.round((distanceMeters / 1609.34) * 10) / 10
-        const travelTimeMinutes = Math.round((travelTimeSeconds / 60) * 10) / 10
-        const score = trafficDelaySeconds + travelTimeSeconds * 0.5 + distanceMeters * 0.01
-
-        return {
-          id: index + 1,
-          startingPoint: startingPointLocation,
+        return buildRouteFromTomTomResponse(
+          apiResponse,
+          startingPointLocation,
           destination,
-          path: routeShape,
-          distanceMiles,
-          distanceMeters,
-          travelTimeSeconds,
-          travelTimeMinutes,
-          trafficDelaySeconds,
-          score,
-        }
+          index + 1
+        )
       })
 
-      const routeResults = await Promise.all(routePromises)
+      const settledRouteResults = await Promise.allSettled(routePromises)
+      const routeResults = settledRouteResults
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value)
+      const failedRouteCount = settledRouteResults.length - routeResults.length
 
-      const bestRoute = routeResults.reduce((currentBest, route) => {
+      if (routeResults.length === 0) {
+        throw new Error('No routes could be generated. Try a different radius or starting point.')
+      }
+
+      const scoredRoutes = addRouteQualityScores(routeResults)
+
+      const bestRoute = scoredRoutes.reduce((currentBest, route) => {
         return route.score < currentBest.score ? route : currentBest
-      }, routeResults[0])
+      }, scoredRoutes[0])
 
-      const newRoutes = routeResults.map((route) => ({
+      const newRoutes = scoredRoutes.map((route, index) => ({
         ...route,
         isBest: route.id === bestRoute.id,
+        color: ROUTE_COLORS[index % ROUTE_COLORS.length],
       }))
 
       setRoutes(newRoutes)
+      setSelectedRouteId(bestRoute.id)
+      setRouteError(
+        failedRouteCount > 0
+          ? `Generated ${routeResults.length} route option${routeResults.length === 1 ? '' : 's'}. ${failedRouteCount} option${failedRouteCount === 1 ? '' : 's'} could not be generated.`
+          : null
+      )
     } catch (error) {
-      console.error('TomTom route generation failed:', error)
       setRouteError(
         error?.message || 'Unable to generate routes from TomTom. Please try again.'
       )
       setRoutes([])
+      setSelectedRouteId(null)
+      setHoveredRouteId(null)
     } finally {
       setIsGenerating(false)
     }
@@ -134,7 +142,16 @@ function App() {
   const handleClearRoutes = () => {
     setRoutes([])
     setSelectedRouteId(null)
+    setHoveredRouteId(null)
     setRouteError(null)
+  }
+
+  const handleRouteSelect = (routeId) => {
+    setSelectedRouteId(routeId)
+  }
+
+  const handleRouteHover = (routeId) => {
+    setHoveredRouteId(routeId)
   }
 
   // Regenerate routes using the current radius and starting point
@@ -151,8 +168,8 @@ function App() {
         startingPoint={startingPoint}
         routes={routes}
         selectedRouteId={selectedRouteId}
+        hoveredRouteId={hoveredRouteId}
         onMapClick={handleMapClick}
-        onResetLocation={handleResetLocation}
       />
       <div className="right-panels">
         <InfoPanel
@@ -169,10 +186,12 @@ function App() {
           onResetStartingPoint={handleResetLocation}
           isGenerating={isGenerating}
           errorMessage={routeError}
+          hasRoutes={routes.length > 0}
         />
         <RouteList
           routes={routes}
-          onRouteHover={setSelectedRouteId}
+          onRouteHover={handleRouteHover}
+          onRouteSelect={handleRouteSelect}
           selectedRouteId={selectedRouteId}
         />
       </div>

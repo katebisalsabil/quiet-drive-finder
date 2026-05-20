@@ -9,6 +9,7 @@ function RouteGenerator({
   onResetStartingPoint,
   isGenerating,
   errorMessage,
+  hasRoutes,
 }) {
   // State for the selected radius (in miles)
   const [selectedRadius, setSelectedRadius] = useState(20)
@@ -35,8 +36,8 @@ function RouteGenerator({
 
       {/* Show error if no starting point selected */}
       {!startingPoint && (
-        <div className="error-message">
-          <p>⚠️ Please select a starting point on the map first.</p>
+        <div className="error-message" aria-live="polite">
+          <p>Please click the map and confirm a starting point first.</p>
         </div>
       )}
 
@@ -68,16 +69,24 @@ function RouteGenerator({
 
           {/* Primary action: Generate real routes */}
           <button
+            type="button"
             className="btn btn-generate"
             onClick={handleGenerateClick}
             disabled={isGenerating}
           >
-            {isGenerating ? 'Generating...' : 'Generate Real Routes'}
+            {isGenerating ? 'Generating real routes...' : 'Generate Real Routes'}
           </button>
+
+          {isGenerating && (
+            <p className="loading-message" aria-live="polite">
+              Asking TomTom for route options. This can take a few seconds.
+            </p>
+          )}
 
           {/* Secondary controls: Regenerate and Clear Routes */}
           <div className="button-group">
             <button
+              type="button"
               className="btn btn-secondary"
               onClick={handleRegenerateClick}
               disabled={isGenerating}
@@ -86,8 +95,10 @@ function RouteGenerator({
               Regenerate Routes
             </button>
             <button
+              type="button"
               className="btn btn-secondary"
               onClick={onClearRoutes}
+              disabled={isGenerating || !hasRoutes}
               title="Remove all routes but keep your starting point"
             >
               Clear Routes
@@ -96,8 +107,10 @@ function RouteGenerator({
 
           {/* Reset: Goes back to the start */}
           <button
+            type="button"
             className="btn btn-danger"
             onClick={onResetStartingPoint}
+            disabled={isGenerating}
             title="Clear starting point and all routes - start over from the beginning"
           >
             Reset Starting Point
@@ -106,7 +119,7 @@ function RouteGenerator({
       )}
 
       {errorMessage && (
-        <div className="error-message">
+        <div className="error-message" aria-live="polite">
           <p>{errorMessage}</p>
         </div>
       )}

@@ -1,5 +1,10 @@
 # Quiet Drive Finder - Phase Plan
 
+## Current Status
+The app currently has the Phase 5 TomTom routing flow working, plus early route-quality cleanup such as best-route labeling, route cards, loading messages, and safer error handling.
+
+Future work should continue from this existing React + Vite project. Do not start a new project unless the user explicitly asks.
+
 ## Phase 1: Project Setup
 Goal: Create the basic React app and save it with Git/GitHub.
 

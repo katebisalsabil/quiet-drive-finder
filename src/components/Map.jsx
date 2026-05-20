@@ -1,4 +1,5 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet'
+import { Fragment, useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import '../styles/Map.css'
@@ -12,6 +13,23 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
+const DEFAULT_LOCATION = [42.8216, -83.0006]
+
+function createMarkerIcon(colorName) {
+  return new L.Icon({
+    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${colorName}.png`,
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  })
+}
+
+const selectedIcon = createMarkerIcon('blue')
+const confirmedIcon = createMarkerIcon('green')
+const destinationIcon = createMarkerIcon('orange')
+
 // Custom hook to handle map clicks
 // This is a Leaflet/React Leaflet feature that lets components listen to map events
 function MapClickHandler({ onMapClick }) {
@@ -24,50 +42,132 @@ function MapClickHandler({ onMapClick }) {
   return null
 }
 
+function RouteZoomHandler({ routes, selectedRouteId }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!selectedRouteId) {
+      return
+    }
+
+    const selectedRoute = routes.find((route) => route.id === selectedRouteId)
+
+    if (!selectedRoute || !Array.isArray(selectedRoute.path) || selectedRoute.path.length === 0) {
+      return
+    }
+
+    // When a route card is clicked, zoom the map to show that whole route.
+    const bounds = L.latLngBounds(selectedRoute.path)
+
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, {
+        padding: [36, 36],
+        maxZoom: 13,
+        animate: true,
+      })
+    }
+  }, [map, routes, selectedRouteId])
+
+  return null
+}
+
+function isCloseToPoint(pathPoint, mapPoint) {
+  return (
+    Math.abs(pathPoint[0] - mapPoint.lat) < 0.0002 &&
+    Math.abs(pathPoint[1] - mapPoint.lng) < 0.0002
+  )
+}
+
+function getDisplayPath(route) {
+  if (!route.displayOffset) {
+    return route.path
+  }
+
+  // The offset is tiny. It only helps nearby overlapping lines stay readable.
+  const offsetSize = 0.00008 * route.displayOffset
+
+  return route.path.map((point, index) => {
+    const isFirstPoint = index === 0
+    const isLastPoint = index === route.path.length - 1
+    const isDestinationPoint = isCloseToPoint(point, route.destination)
+
+    if (isFirstPoint || isLastPoint || isDestinationPoint) {
+      return point
+    }
+
+    return [point[0] + offsetSize, point[1] - offsetSize]
+  })
+}
+
+function getRouteLineOptions(route, isSelected, isHovered) {
+  const isBest = route.isBest
+
+  return {
+    color: route.color || '#4CAF50',
+    weight: isSelected ? 4.5 : isHovered ? 4 : isBest ? 3.5 : 3,
+    opacity: isSelected ? 0.82 : isHovered ? 0.76 : isBest ? 0.68 : 0.6,
+    lineCap: 'round',
+    lineJoin: 'round',
+  }
+}
+
+function getRouteHighlightOptions(route, isSelected) {
+  return {
+    color: route.color || '#4CAF50',
+    weight: isSelected ? 8 : 6,
+    opacity: isSelected ? 0.14 : 0.09,
+    lineCap: 'round',
+    lineJoin: 'round',
+  }
+}
+
+function RouteLegend({ routes }) {
+  if (routes.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="route-legend">
+      <h3>Route legend</h3>
+      <div className="legend-items">
+        {routes.map((route) => (
+          <div key={`legend-${route.id}`} className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: route.color }} />
+            <span>
+              Route {route.id}
+              {route.isBest ? ' (Best quiet route)' : ''}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="legend-note">Selected routes use a soft outline.</div>
+    </div>
+  )
+}
+
 function Map({
   selectedLocation,
   startingPoint,
   routes,
   selectedRouteId,
+  hoveredRouteId,
   onMapClick,
-  onResetLocation,
 }) {
-  // Default location: Sterling Heights, Michigan
-  const defaultLocation = [42.8216, -83.0006]
-
   // Determine which location to show on map
   // Priority: startingPoint (confirmed) > selectedLocation (temporary) > default
-  const displayLocation = startingPoint || selectedLocation || defaultLocation
-
-  // Create icons for different marker types
-  // Blue icon for selected but not confirmed location
-  const selectedIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-  })
-
-  // Green icon for confirmed starting point
-  const confirmedIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-  })
-
-  // Orange icon for destination points
-  const destinationIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
+  const displayLocation = startingPoint || selectedLocation || DEFAULT_LOCATION
+  const mapCenter = Array.isArray(displayLocation)
+    ? displayLocation
+    : [displayLocation.lat, displayLocation.lng]
+  const activeRouteId = hoveredRouteId || selectedRouteId
+  const routesForDrawing = [...routes].sort((firstRoute, secondRoute) => {
+    if (firstRoute.id === activeRouteId) {
+      return 1
+    }
+    if (secondRoute.id === activeRouteId) {
+      return -1
+    }
+    return 0
   })
 
   return (
@@ -76,7 +176,7 @@ function Map({
       {/* zoom: 13 is a good starting zoom level for a city */}
       {/* center: [lat, lng] - the point where the map starts */}
       <MapContainer
-        center={defaultLocation}
+        center={mapCenter}
         zoom={13}
         scrollWheelZoom={true}
       >
@@ -90,29 +190,34 @@ function Map({
         {/* MapClickHandler listens for clicks on the map */}
         {/* When user clicks, it calls onMapClick with the coordinates */}
         <MapClickHandler onMapClick={onMapClick} />
+        <RouteZoomHandler routes={routes} selectedRouteId={selectedRouteId} />
 
         {/* Draw route lines for each generated route */}
         {/* Each route is a round trip: start → destination → start */}
-        {routes.map((route) => {
+        {routesForDrawing.map((route) => {
           const isSelected = selectedRouteId === route.id
-          const isBest = route.isBest
-          let lineColor = '#4CAF50'
-          if (isBest) {
-            lineColor = '#FF9800'
-          }
-          if (isSelected) {
-            lineColor = '#FF0000'
-          }
-          const lineWeight = isSelected || isBest ? 4 : 2
+          const isHovered = hoveredRouteId === route.id
+          const isActive = isSelected || isHovered
+          const displayPath = getDisplayPath(route)
+          const lineOptions = getRouteLineOptions(route, isSelected, isHovered)
 
           return (
-            <Polyline
-              key={`route-${route.id}`}
-              positions={route.path}
-              color={lineColor}
-              weight={lineWeight}
-              opacity={isSelected || isBest ? 0.8 : 0.4}
-            />
+            <Fragment key={`route-wrapper-${route.id}`}>
+              {isActive && (
+                <Polyline
+                  key={`route-soft-highlight-${route.id}`}
+                  positions={displayPath}
+                  pathOptions={getRouteHighlightOptions(route, isSelected)}
+                  smoothFactor={1.3}
+                />
+              )}
+              <Polyline
+                key={`route-${route.id}`}
+                positions={displayPath}
+                pathOptions={lineOptions}
+                smoothFactor={1.3}
+              />
+            </Fragment>
           )
         })}
 
@@ -128,7 +233,7 @@ function Map({
                 <h3>Route {route.id} Destination</h3>
                 <p>Latitude: {route.destination.lat.toFixed(4)}</p>
                 <p>Longitude: {route.destination.lng.toFixed(4)}</p>
-                <p>Round trip distance: {route.distance} miles</p>
+                <p>Round trip distance: {route.distanceMiles} miles</p>
               </div>
             </Popup>
           </Marker>
@@ -140,7 +245,7 @@ function Map({
           <Marker position={[startingPoint.lat, startingPoint.lng]} icon={confirmedIcon}>
             <Popup>
               <div>
-                <h3>✓ Starting Point</h3>
+                <h3>Starting Point</h3>
                 <p>Latitude: {startingPoint.lat.toFixed(4)}</p>
                 <p>Longitude: {startingPoint.lng.toFixed(4)}</p>
               </div>
@@ -175,6 +280,7 @@ function Map({
           </Marker>
         )}
       </MapContainer>
+      <RouteLegend routes={routes} />
     </div>
   )
 }
