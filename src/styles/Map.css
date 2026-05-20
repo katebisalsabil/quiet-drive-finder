@@ -1,4 +1,4 @@
-/* Map.css - Styles for the Leaflet map */
+/* Map.css - Styles for the Leaflet map container */
 
 .map-container {
   /* Take up all available space */
@@ -7,6 +7,7 @@
   
   /* Make sure the map fills the container */
   flex-grow: 1;
+  position: relative;
 }
 
 /* Style the map div that Leaflet creates */
@@ -31,4 +32,9 @@
   margin: 5px 0 0 0;
   font-size: 14px;
   color: #666;
+}
+
+/* Ensure Leaflet controls are above the info panel */
+.map-container .leaflet-control {
+  z-index: 999;
 }

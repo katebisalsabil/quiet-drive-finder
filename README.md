@@ -31,11 +31,15 @@ This app is a simple starting point for a route planning tool that will eventual
 - Fixed styling so the map fills the entire screen.
 - Added comments to the code for beginner understanding.
 
-### Phase 3: Home Location / Pinpoint
-- Add map click to place a home marker.
-- Add button to use browser geolocation.
-- Save selected coordinates in app state.
-- Display selected latitude/longitude.
+### Phase 3: Home Location / Pinpoint ✓ Complete
+- User can click anywhere on the map to select a location.
+- Temporary marker (blue) appears at the clicked location.
+- Info panel shows the latitude and longitude of the selected location.
+- "Use this as my starting point" button confirms the selection.
+- Confirmed marker (green) appears and stays on the map.
+- "Reset starting point" button clears the selection.
+- Map centered on Sterling Heights, Michigan by default.
+- Info panel displays on the right side of the screen.
 
 ### Phase 4: Radius and Candidate Points
 - Add radius input, default 20 miles.
@@ -86,10 +90,34 @@ Then open the URL shown in the terminal, usually:
 http://127.0.0.1:4173/
 ```
 
-The app will display an interactive map centered on Sterling Heights, Michigan. You can:
-- Zoom in and out with the mouse wheel or +/- buttons.
-- Pan the map by clicking and dragging.
-- Click the "Starting area" marker to see a popup.
+The app will display an interactive map centered on Sterling Heights, Michigan with an info panel on the right.
+
+### How to test Phase 3 features:
+
+1. **Click on the map** to select a location:
+   - A blue marker will appear where you clicked.
+   - The info panel will show the latitude and longitude.
+   - Numbers are shown with 6 decimal places (very precise).
+
+2. **Confirm your starting point:**
+   - Click the green "Use this as my starting point" button in the info panel.
+   - The marker will turn green (confirming it's your starting point).
+   - A message will appear saying "✓ Starting Point Confirmed".
+
+3. **Select a new location:**
+   - Click another place on the map (while a starting point is confirmed).
+   - You'll see both the confirmed green marker and a new blue marker.
+   - The info panel will show a section to update your starting point.
+   - Click "Update starting point to here" to move your starting point.
+
+4. **Reset your selection:**
+   - Click the red "Reset starting point" button.
+   - The markers will disappear and you can start over.
+
+5. **Normal map controls still work:**
+   - Zoom in and out with the mouse wheel or +/- buttons.
+   - Pan the map by clicking and dragging (not on a marker).
+   - Click a marker's popup to see the coordinates.
 
 ## Git workflow
 
@@ -98,7 +126,7 @@ A simple Git workflow for this project is:
 1. Create a branch for your work:
 
 ```bash
-git checkout -b phase-2-basic-map
+git checkout -b phase-3-home-location
 ```
 
 2. Add changes:
@@ -110,20 +138,20 @@ git add .
 3. Commit with a clear message:
 
 ```bash
-git commit -m "Phase 2: add basic interactive map"
+git commit -m "Phase 3: add home location selection"
 ```
 
 4. Push your branch:
 
 ```bash
-git push -u origin phase-2-basic-map
+git push -u origin phase-3-home-location
 ```
 
 5. Open a pull request when you are ready.
 
 ## Future API note
 
-Phase 2 does not use any external APIs. In Phase 5 and later, the app will connect to TomTom routing and traffic APIs to make quiet-route suggestions.
+Phase 3 does not use any external APIs. In Phase 5 and later, the app will connect to TomTom routing and traffic APIs to make quiet-route suggestions.
 
 ## Folder structure
 

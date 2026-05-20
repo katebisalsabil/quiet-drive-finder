@@ -1,0 +1,156 @@
+/* InfoPanel.css - Styles for the information panel showing selected coordinates */
+
+.info-panel {
+  /* Positioned on the right side of the screen */
+  position: fixed;
+  right: 10px;
+  top: 10px;
+  width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+
+  /* Background and styling */
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  /* Font styling */
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: #333;
+  z-index: 1000;
+}
+
+.info-panel h2 {
+  margin: 0 0 15px 0;
+  font-size: 20px;
+  color: #222;
+}
+
+.info-panel h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #444;
+}
+
+/* Empty state - no location selected */
+.info-empty {
+  text-align: center;
+  color: #666;
+  padding: 10px 0;
+}
+
+.info-empty p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Selected location display */
+.info-selected,
+.info-confirmed {
+  padding: 10px 0;
+}
+
+.coordinates {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.coordinates p {
+  margin: 5px 0;
+  line-height: 1.4;
+}
+
+.coordinates strong {
+  display: inline-block;
+  width: 85px;
+}
+
+/* Confirmation message */
+.info-message {
+  font-size: 13px;
+  color: #666;
+  margin: 10px 0;
+  padding: 10px;
+  background: #e8f5e9;
+  border-radius: 4px;
+  line-height: 1.4;
+}
+
+/* New selection warning */
+.info-new-selection {
+  margin-top: 15px;
+  padding-top: 15px;
+}
+
+.info-new-selection hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 0 0 15px 0;
+}
+
+.info-new-selection p {
+  font-size: 13px;
+  color: #666;
+  margin: 10px 0;
+  line-height: 1.4;
+}
+
+/* Button styles */
+.btn {
+  width: 100%;
+  padding: 10px 15px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Primary button - for confirming selection */
+.btn-primary {
+  background: #4CAF50;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #45a049;
+}
+
+/* Secondary button - for reset */
+.btn-secondary {
+  background: #f44336;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #da190b;
+}
+
+/* Mobile responsive - move panel to bottom on small screens */
+@media (max-width: 768px) {
+  .info-panel {
+    position: fixed;
+    right: auto;
+    left: 10px;
+    top: auto;
+    bottom: 10px;
+    width: calc(100% - 20px);
+    max-height: 40vh;
+  }
+}
