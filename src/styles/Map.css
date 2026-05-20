@@ -1,0 +1,34 @@
+/* Map.css - Styles for the Leaflet map */
+
+.map-container {
+  /* Take up all available space */
+  width: 100%;
+  height: 100%;
+  
+  /* Make sure the map fills the container */
+  flex-grow: 1;
+}
+
+/* Style the map div that Leaflet creates */
+.map-container .leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Popup styling - makes popups look better */
+.map-container .leaflet-popup-content {
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  padding: 10px;
+}
+
+.map-container .leaflet-popup-content h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+}
+
+.map-container .leaflet-popup-content p {
+  margin: 5px 0 0 0;
+  font-size: 14px;
+  color: #666;
+}
