@@ -1,4 +1,4 @@
-/* PlaceSearch.css - Google Places search inside the starting point panel */
+/* PlaceSearch.css - TomTom address/place search inside the starting point panel */
 
 .place-search {
   display: flex;
@@ -10,6 +10,12 @@
 .place-search label {
   font-size: 13px;
   color: #334155;
+}
+
+.place-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
 }
 
 .place-search input {
@@ -29,9 +35,26 @@
   box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.14);
 }
 
-.place-search input:disabled {
-  background: #f8fafc;
-  color: #94a3b8;
+.place-search button {
+  border: none;
+  border-radius: 6px;
+  padding: 0 12px;
+  background: #1565c0;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.place-search button:hover,
+.place-search button:focus {
+  background: #0f4f99;
+  outline: none;
+}
+
+.place-search button:disabled {
+  background: #94a3b8;
+  cursor: wait;
 }
 
 .place-search-help,
@@ -49,6 +72,56 @@
   color: #475569;
 }
 
-.pac-container {
-  z-index: 2000;
+.place-search-results {
+  list-style: none;
+  margin: 4px 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.place-search-results li {
+  margin: 0;
+}
+
+.place-search-results button {
+  width: 100%;
+  text-align: left;
+  background: #f8fafc;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  padding: 9px 10px;
+}
+
+.place-search-results button:hover,
+.place-search-results button:focus {
+  background: #eef6ff;
+  border-color: #93c5fd;
+  color: #0f172a;
+}
+
+.place-search-results strong,
+.place-search-results span {
+  display: block;
+}
+
+.place-search-results strong {
+  font-size: 13px;
+}
+
+.place-search-results span {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+@media (max-width: 480px) {
+  .place-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .place-search button {
+    padding: 10px 12px;
+  }
 }

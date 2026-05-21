@@ -62,7 +62,7 @@ function App() {
     }
   }
 
-  // Google Places search sets the starting point right away.
+  // Address/place search sets the starting point right away.
   const handlePlaceSelect = useCallback((placeLocation) => {
     setStartingPoint(placeLocation)
     setSelectedLocation(null)

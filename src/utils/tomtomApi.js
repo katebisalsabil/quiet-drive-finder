@@ -1,6 +1,72 @@
 // tomtomApi.js - Helper for fetching real driving routes from TomTom
 
 const TOMTOM_ROUTE_TIMEOUT_MS = 15000
+const TOMTOM_SEARCH_TIMEOUT_MS = 10000
+
+export async function searchTomTomPlaces(query) {
+  // The same TomTom key powers both route generation and address/place search.
+  const apiKey = import.meta.env.VITE_TOMTOM_API_KEY
+
+  if (!apiKey) {
+    throw new Error('Search API key missing.')
+  }
+
+  const trimmedQuery = query.trim()
+
+  if (!trimmedQuery) {
+    return {
+      ok: false,
+      results: [],
+      message: 'No location found. Try a more specific address.',
+    }
+  }
+
+  const searchParams = new URLSearchParams({
+    key: apiKey,
+    limit: '5',
+    countrySet: 'US',
+    language: 'en-US',
+    typeahead: 'true',
+  })
+  const url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(trimmedQuery)}.json?${searchParams.toString()}`
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), TOMTOM_SEARCH_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(url, { signal: controller.signal })
+    const data = await readJsonResponse(response)
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        results: [],
+        message: 'No location found. Try a more specific address.',
+      }
+    }
+
+    const results = mapTomTomSearchResults(data.results)
+
+    return {
+      ok: results.length > 0,
+      results,
+      message: results.length > 0
+        ? ''
+        : 'No location found. Try a more specific address.',
+    }
+  } catch (error) {
+    const timedOut = error?.name === 'AbortError'
+
+    return {
+      ok: false,
+      results: [],
+      message: timedOut
+        ? 'Location search took too long. Try again.'
+        : 'No location found. Try a more specific address.',
+    }
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
+}
 
 export async function fetchTomTomRoute(points, routeOptions = {}) {
   // Read the API key from Vite environment variables
@@ -116,6 +182,34 @@ async function readJsonResponse(response) {
   } catch {
     return {}
   }
+}
+
+function mapTomTomSearchResults(results) {
+  if (!Array.isArray(results)) {
+    return []
+  }
+
+  return results
+    .map((result) => {
+      const lat = result.position?.lat
+      const lng = result.position?.lon
+
+      if (typeof lat !== 'number' || typeof lng !== 'number') {
+        return null
+      }
+
+      const placeName = result.poi?.name || result.address?.freeformAddress || result.type || 'Found location'
+      const address = result.address?.freeformAddress || result.address?.streetName || ''
+
+      return {
+        lat,
+        lng,
+        placeName,
+        address,
+        placeId: result.id || '',
+      }
+    })
+    .filter(Boolean)
 }
 
 function extractLegShapes(route) {

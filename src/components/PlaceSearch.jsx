@@ -1,153 +1,114 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
+import { searchTomTomPlaces } from '../utils/tomtomApi'
 import '../styles/PlaceSearch.css'
 
-const GOOGLE_MAPS_SCRIPT_ID = 'google-maps-places-script'
-
-function getGoogleMapsApiKey() {
-  return import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-}
-
-function loadGooglePlacesLibrary(apiKey) {
-  if (window.google?.maps?.places) {
-    return Promise.resolve(window.google)
+function getResultLabel(result) {
+  if (result.address && result.address !== result.placeName) {
+    return `${result.placeName} - ${result.address}`
   }
 
-  if (window.__quietDriveGoogleMapsPromise) {
-    return window.__quietDriveGoogleMapsPromise
-  }
-
-  window.__quietDriveGoogleMapsPromise = new Promise((resolve, reject) => {
-    const existingScript = document.getElementById(GOOGLE_MAPS_SCRIPT_ID)
-
-    if (existingScript) {
-      existingScript.addEventListener('load', () => resolve(window.google))
-      existingScript.addEventListener('error', () => reject(new Error('Google Places could not load.')))
-      return
-    }
-
-    const script = document.createElement('script')
-    const searchParams = new URLSearchParams({
-      key: apiKey,
-      libraries: 'places',
-      loading: 'async',
-    })
-
-    script.id = GOOGLE_MAPS_SCRIPT_ID
-    script.src = `https://maps.googleapis.com/maps/api/js?${searchParams.toString()}`
-    script.async = true
-    script.defer = true
-    script.addEventListener('load', () => resolve(window.google))
-    script.addEventListener('error', () => reject(new Error('Google Places could not load.')))
-
-    document.head.appendChild(script)
-  })
-
-  return window.__quietDriveGoogleMapsPromise
-}
-
-function getPlaceLocation(place) {
-  const location = place?.geometry?.location
-
-  if (!location) {
-    return null
-  }
-
-  return {
-    lat: location.lat(),
-    lng: location.lng(),
-  }
+  return result.placeName
 }
 
 function PlaceSearch({ onPlaceSelect }) {
-  const inputRef = useRef(null)
-  const autocompleteRef = useRef(null)
+  const [searchText, setSearchText] = useState('')
+  const [searchResults, setSearchResults] = useState([])
   const [statusMessage, setStatusMessage] = useState('')
-  const [isReady, setIsReady] = useState(false)
-  const googleMapsApiKey = getGoogleMapsApiKey()
+  const [isSearching, setIsSearching] = useState(false)
 
-  useEffect(() => {
-    if (!googleMapsApiKey) {
-      return undefined
+  function selectResult(result) {
+    setSearchText(getResultLabel(result))
+    setSearchResults([])
+    setStatusMessage(`Starting point set to ${getResultLabel(result)}.`)
+    onPlaceSelect(result)
+  }
+
+  async function handleSearch() {
+    const trimmedSearchText = searchText.trim()
+
+    if (!trimmedSearchText) {
+      setSearchResults([])
+      setStatusMessage('No location found. Try a more specific address.')
+      return
     }
 
-    let isMounted = true
-    let placeChangedListener = null
+    setIsSearching(true)
+    setStatusMessage('')
 
-    loadGooglePlacesLibrary(googleMapsApiKey)
-      .then((google) => {
-        if (!isMounted || !inputRef.current) {
-          return
-        }
+    try {
+      // TomTom Search turns a typed address or place name into latitude/longitude.
+      const searchResponse = await searchTomTomPlaces(trimmedSearchText)
 
-        // Autocomplete watches the text input and returns a place when the user selects a result.
-        autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-          fields: ['geometry', 'name', 'formatted_address', 'place_id'],
-        })
-
-        placeChangedListener = autocompleteRef.current.addListener('place_changed', () => {
-          const place = autocompleteRef.current.getPlace()
-          const location = getPlaceLocation(place)
-
-          if (!location) {
-            setStatusMessage('Please choose a place from the search suggestions.')
-            return
-          }
-
-          const label = place.formatted_address || place.name || 'Selected place'
-
-          inputRef.current.value = label
-          setStatusMessage(`Starting point set to ${label}.`)
-          onPlaceSelect({
-            lat: location.lat,
-            lng: location.lng,
-            placeName: place.name || '',
-            address: place.formatted_address || '',
-            placeId: place.place_id || '',
-          })
-        })
-
-        setIsReady(true)
-        setStatusMessage('')
-      })
-      .catch(() => {
-        if (isMounted) {
-          setStatusMessage('Google place search could not load. You can still click the map.')
-        }
-      })
-
-    return () => {
-      isMounted = false
-
-      if (placeChangedListener) {
-        placeChangedListener.remove()
+      if (!searchResponse.ok) {
+        setSearchResults([])
+        setStatusMessage(searchResponse.message || 'No location found. Try a more specific address.')
+        return
       }
-    }
-  }, [googleMapsApiKey, onPlaceSelect])
 
-  const visibleStatusMessage = googleMapsApiKey
-    ? statusMessage
-    : 'Add VITE_GOOGLE_MAPS_API_KEY to use place search.'
+      setSearchResults(searchResponse.results)
+      setStatusMessage('Choose a search result below.')
+
+      if (searchResponse.results.length === 1) {
+        selectResult(searchResponse.results[0])
+      }
+    } catch (error) {
+      setSearchResults([])
+      setStatusMessage(error?.message || 'No location found. Try a more specific address.')
+    } finally {
+      setIsSearching(false)
+    }
+  }
 
   return (
     <div className="place-search">
       <label htmlFor="place-search-input">
         <strong>Search address or place</strong>
       </label>
-      <input
-        id="place-search-input"
-        ref={inputRef}
-        type="text"
-        placeholder="Search address or place"
-        disabled={!googleMapsApiKey}
-        autoComplete="off"
-      />
+      <div className="place-search-row">
+        <input
+          id="place-search-input"
+          type="text"
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              handleSearch()
+            }
+          }}
+          placeholder="Home address or Macomb Community College"
+          autoComplete="off"
+        />
+        <button
+          type="button"
+          onClick={handleSearch}
+          disabled={isSearching}
+        >
+          {isSearching ? 'Searching...' : 'Search'}
+        </button>
+      </div>
       <p className="place-search-help">
-        {isReady ? 'Choose a Google suggestion to set the starting point.' : 'Map click still works as a backup.'}
+        Search uses TomTom. Map click still works as a backup.
       </p>
-      {visibleStatusMessage && (
+      {statusMessage && (
         <p className="place-search-status" aria-live="polite">
-          {visibleStatusMessage}
+          {statusMessage}
         </p>
+      )}
+      {searchResults.length > 0 && (
+        <ul className="place-search-results">
+          {searchResults.map((result) => (
+            <li key={`${result.placeId}-${result.lat}-${result.lng}`}>
+              <button
+                type="button"
+                onClick={() => selectResult(result)}
+              >
+                <strong>{result.placeName}</strong>
+                {result.address && <span>{result.address}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   )

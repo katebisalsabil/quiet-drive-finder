@@ -2,12 +2,12 @@
 
 Quiet Drive Finder is a beginner-friendly personal React app for finding calmer round-trip driving routes near a selected starting point.
 
-The app runs fully in the browser. It uses Leaflet and OpenStreetMap for the map, and TomTom Routing API for real driving route shapes, distance, drive time, and traffic delay.
+The app runs fully in the browser. It uses Leaflet and OpenStreetMap for the map, and TomTom APIs for address search, real driving route shapes, distance, drive time, and traffic delay.
 
 ## Current Features
 
 - Interactive Leaflet map with OpenStreetMap tiles.
-- Google Places search for addresses, businesses, schools, stores, and landmarks.
+- TomTom address/place search for addresses, businesses, schools, stores, and landmarks.
 - Click the map to choose a starting point.
 - Confirm, update, or reset the starting point.
 - Choose a route radius: 5, 10, 15, or 20 miles.
@@ -36,7 +36,7 @@ The app runs fully in the browser. It uses Leaflet and OpenStreetMap for the map
 - React Leaflet
 - OpenStreetMap tiles
 - TomTom Routing API
-- Google Maps JavaScript API Places Library
+- TomTom Search API
 - ESLint
 
 No backend, database, or user accounts were added.
@@ -47,30 +47,17 @@ Create a local `.env` file in the project root:
 
 ```bash
 VITE_TOMTOM_API_KEY=your_real_tomtom_key_here
-VITE_GOOGLE_MAPS_API_KEY=your_real_google_maps_key_here
 ```
 
 The real `.env` and `.env.local` files are ignored by Git and should not be committed. The safe template file is `.env.example`.
 
-Important: because this is a browser-only app, the TomTom and Google keys are used by frontend code. The app does not print the keys in the UI or console, but a public production app should use account restrictions or a backend later.
+Important: because this is a browser-only app, the TomTom key is used by frontend code. The app does not print the key in the UI or console, but a public production app should use account restrictions or a backend later.
 
-## Google Places Key Setup
+## Address Search
 
-The Google key is only used for finding the starting point by name or address. TomTom still handles route generation, drive time, distance, and traffic.
+The `Search address or place` box uses TomTom Search API with the same `VITE_TOMTOM_API_KEY` used for routing. Type an address or place name, press Enter or click `Search`, then choose one of the results. The selected result becomes the confirmed starting point and moves the Leaflet map there.
 
-1. Open Google Cloud Console.
-2. Create or choose a Google Cloud project.
-3. Enable `Maps JavaScript API`.
-4. Enable the Places API that supports the Maps JavaScript Places Library. In some Google screens this may appear as `Places API` or `Places API (Legacy)`.
-5. Create an API key.
-6. Restrict the key for browser use with your local/dev URLs.
-7. Add the key to `.env`:
-
-```bash
-VITE_GOOGLE_MAPS_API_KEY=your_real_google_maps_key_here
-```
-
-Google Maps Platform may require billing for API usage. Keep usage restricted in Google Cloud.
+If the key is missing, the app shows `Search API key missing.` If no result is found, it shows `No location found. Try a more specific address.`
 
 ## Google Maps Navigation Links
 
@@ -107,8 +94,8 @@ http://localhost:5173/
 
 1. Start the app with `npm run dev`.
 2. Click the map to place a blue selected-location marker.
-3. Or search for a place like `Macomb Community College` in `Search address or place`.
-4. If you clicked the map, click `Use this as my starting point`.
+3. Or search for a place like `Macomb Community College` in `Search address or place`, then choose a result.
+4. If you clicked the map instead, click `Use this as my starting point`.
 5. Choose a radius in the Route Generator panel.
 6. Choose `20 minutes` or `30 minutes` for the maximum round-trip drive time.
 7. Optional: check `Avoid highways` or `Prefer local roads`.
@@ -131,8 +118,8 @@ Use this checklist before saving or pushing a phase:
 - `.env.local` does not appear in `git status`.
 - The app opens with `npm run dev`.
 - The map loads and can be moved/zoomed.
-- Searching `Macomb Community College` shows Google suggestions.
-- Selecting a Google place sets the starting point and moves the map there.
+- Searching `Macomb Community College` returns TomTom results.
+- Selecting a TomTom search result sets the starting point and moves the map there.
 - Clicking the map shows a selected starting point.
 - Confirming the starting point enables route generation.
 - The maximum round-trip drive time selector offers `20 minutes` and `30 minutes`.
