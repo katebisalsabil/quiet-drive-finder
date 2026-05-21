@@ -9,10 +9,12 @@ function RouteGenerator({
   onResetStartingPoint,
   isGenerating,
   errorMessage,
+  noticeMessage,
   hasRoutes,
 }) {
   // State for the selected radius (in miles)
   const [selectedRadius, setSelectedRadius] = useState(20)
+  const [avoidHighways, setAvoidHighways] = useState(false)
 
   // Radius options available to the user
   const radiusOptions = [5, 10, 15, 20]
@@ -22,12 +24,12 @@ function RouteGenerator({
     if (!startingPoint) {
       return
     }
-    onGenerateRoutes(startingPoint, selectedRadius)
+    onGenerateRoutes(startingPoint, selectedRadius, { avoidHighways })
   }
 
   // Handle the "Regenerate Routes" button click
   const handleRegenerateClick = () => {
-    onRegenerateRoutes(selectedRadius)
+    onRegenerateRoutes(selectedRadius, { avoidHighways })
   }
 
   return (
@@ -67,6 +69,19 @@ function RouteGenerator({
             point and back.
           </p>
 
+          <label className="avoid-highways-option">
+            <input
+              type="checkbox"
+              checked={avoidHighways}
+              onChange={(event) => setAvoidHighways(event.target.checked)}
+              disabled={isGenerating}
+            />
+            <span>
+              <strong>Avoid highways</strong>
+              <small>TomTom will try to avoid motorways when possible.</small>
+            </span>
+          </label>
+
           {/* Primary action: Generate real routes */}
           <button
             type="button"
@@ -79,7 +94,8 @@ function RouteGenerator({
 
           {isGenerating && (
             <p className="loading-message" aria-live="polite">
-              Asking TomTom for route options. This can take a few seconds.
+              Asking TomTom for route options
+              {avoidHighways ? ' that avoid highways when possible' : ''}. This can take a few seconds.
             </p>
           )}
 
@@ -121,6 +137,12 @@ function RouteGenerator({
       {errorMessage && (
         <div className="error-message" aria-live="polite">
           <p>{errorMessage}</p>
+        </div>
+      )}
+
+      {noticeMessage && !errorMessage && (
+        <div className="notice-message" aria-live="polite">
+          <p>{noticeMessage}</p>
         </div>
       )}
     </div>

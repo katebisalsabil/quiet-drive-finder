@@ -21,3 +21,11 @@ button,
 select {
   font: inherit;
 }
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+[role='button']:focus-visible {
+  outline: 3px solid rgba(21, 101, 192, 0.28);
+  outline-offset: 2px;
+}

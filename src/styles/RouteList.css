@@ -4,9 +4,10 @@
   width: 100%;
 
   background: white;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 18px;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   color: #333;
@@ -14,7 +15,7 @@
 }
 
 .route-list-panel h2 {
-  margin: 0 0 15px 0;
+  margin: 0 0 12px 0;
   font-size: 20px;
   color: #222;
 }
@@ -62,11 +63,11 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .route-item {
-  border: 2px solid #e0e0e0;
+  border: 1px solid #d9e2ec;
   border-radius: 8px;
   padding: 0;
   background: white;
@@ -79,7 +80,7 @@
 
 .route-item:hover,
 .route-item:focus {
-  border-color: #7c8a9a;
+  border-color: #64748b;
   background: #f8fafc;
   box-shadow: 0 2px 8px rgba(47, 67, 88, 0.12);
   outline: none;
@@ -92,7 +93,7 @@
 }
 
 .route-strip {
-  height: 8px;
+  height: 6px;
   width: 100%;
 }
 
@@ -101,7 +102,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 12px 16px 8px 16px;
+  margin: 12px 14px 8px 14px;
+  gap: 12px;
 }
 
 .route-header h3 {
@@ -111,16 +113,30 @@
   font-weight: 600;
 }
 
-.best-label {
+.route-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.best-label,
+.option-label {
   display: inline-block;
-  margin-top: 4px;
-  margin-left: 6px;
   padding: 3px 8px;
-  background: #FF9800;
-  color: white;
   font-size: 11px;
   font-weight: 700;
   border-radius: 999px;
+}
+
+.best-label {
+  background: #d58a14;
+  color: white;
+}
+
+.option-label {
+  background: #e0f2fe;
+  color: #075985;
 }
 
 .route-item.best {
@@ -134,7 +150,7 @@
 }
 
 .distance-badge {
-  background: #4CAF50;
+  background: #2E7D32;
   color: white;
   padding: 4px 10px;
   border-radius: 12px;
@@ -149,7 +165,7 @@
 /* Route details */
 .route-details {
   font-size: 13px;
-  padding: 0 16px 16px 16px;
+  padding: 0 14px 14px 14px;
 }
 
 .route-details p {
@@ -161,6 +177,38 @@
   color: #333;
 }
 
+.route-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+
+.route-stat-grid div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.route-stat-grid span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.route-stat-grid strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.destination-label {
+  margin-top: 8px;
+}
+
 .route-coordinates {
   color: #666;
   font-family: monospace;
@@ -168,7 +216,7 @@
 }
 
 .route-description {
-  color: #999;
+  color: #64748b;
   font-size: 12px;
   margin-top: 8px;
   padding-top: 8px;
@@ -179,6 +227,10 @@
 @media (max-width: 768px) {
   .route-list-panel {
     width: 100%;
+  }
+
+  .route-stat-grid {
+    grid-template-columns: 1fr;
   }
 }
 

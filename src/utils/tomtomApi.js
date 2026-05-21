@@ -2,7 +2,7 @@
 
 const TOMTOM_ROUTE_TIMEOUT_MS = 15000
 
-export async function fetchTomTomRoute(points) {
+export async function fetchTomTomRoute(points, routeOptions = {}) {
   // Read the API key from Vite environment variables
   const apiKey = import.meta.env.VITE_TOMTOM_API_KEY
 
@@ -24,6 +24,11 @@ export async function fetchTomTomRoute(points) {
     computeBestOrder: 'false',
     instructionsType: 'text',
   })
+
+  // TomTom calls highways "motorways" in the avoid setting.
+  if (routeOptions.avoidHighways) {
+    searchParams.append('avoid', 'motorways')
+  }
   const url = `https://api.tomtom.com/routing/1/calculateRoute/${locationString}/json?${searchParams.toString()}`
   const controller = new AbortController()
   const timeoutId = window.setTimeout(() => controller.abort(), TOMTOM_ROUTE_TIMEOUT_MS)

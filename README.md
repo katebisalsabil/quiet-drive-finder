@@ -10,6 +10,7 @@ The app runs fully in the browser. It uses Leaflet and OpenStreetMap for the map
 - Click the map to choose a starting point.
 - Confirm, update, or reset the starting point.
 - Choose a route radius: 5, 10, 15, or 20 miles.
+- Optionally ask TomTom to avoid highways when possible.
 - Generate 3 real round-trip route options with TomTom.
 - Show route cards with distance, drive time, traffic delay, and destination coordinates.
 - Label the current best quiet route.
@@ -68,13 +69,34 @@ http://localhost:5173/
 2. Click the map to place a blue selected-location marker.
 3. Click `Use this as my starting point`.
 4. Choose a radius in the Route Generator panel.
-5. Click `Generate Real Routes`.
-6. Wait for TomTom to return route options.
-7. Hover route cards to preview lines on the map.
-8. Click a route card to select it and zoom the map to that route.
-9. Click `Regenerate Routes` to request a fresh set.
-10. Click `Clear Routes` to remove routes while keeping the starting point.
-11. Click `Reset Starting Point` to start over.
+5. Optional: check `Avoid highways`.
+6. Click `Generate Real Routes`.
+7. Wait for TomTom to return route options.
+8. Hover route cards to preview lines on the map.
+9. Click a route card to select it and zoom the map to that route.
+10. Click `Regenerate Routes` to request a fresh set.
+11. Click `Clear Routes` to remove routes while keeping the starting point.
+12. Click `Reset Starting Point` to start over.
+
+## Final Testing Checklist
+
+Use this checklist before saving or pushing a phase:
+
+- `npm run lint` passes.
+- `npm run build` passes.
+- `.env` does not appear in `git status`.
+- The app opens with `npm run dev`.
+- The map loads and can be moved/zoomed.
+- Clicking the map shows a selected starting point.
+- Confirming the starting point enables route generation.
+- `Generate Real Routes` shows a loading message.
+- Routes appear on the map and in the route list.
+- The best quiet route is labeled.
+- Hovering a route card lightly highlights the route.
+- Clicking a route card zooms to that route.
+- `Avoid highways` can be toggled before generating or regenerating.
+- `Regenerate Routes`, `Clear Routes`, and `Reset Starting Point` work.
+- If TomTom fails or the key is missing, the app shows a helpful message without showing the API key.
 
 ## Useful Commands
 

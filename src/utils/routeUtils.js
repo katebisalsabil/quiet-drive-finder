@@ -166,7 +166,13 @@ export function createFallbackRoutePath(startingPoint, destination) {
   ]
 }
 
-export function buildRouteFromTomTomResponse(apiResponse, startingPoint, destination, routeNumber) {
+export function buildRouteFromTomTomResponse(
+  apiResponse,
+  startingPoint,
+  destination,
+  routeNumber,
+  routeOptions = {}
+) {
   const summary = apiResponse.summary || {}
   const distanceMeters = summary.lengthInMeters ?? 0
   const travelTimeSeconds = summary.travelTimeInSeconds ?? 0
@@ -187,6 +193,7 @@ export function buildRouteFromTomTomResponse(apiResponse, startingPoint, destina
     travelTimeSeconds,
     travelTimeMinutes: secondsToMinutes(travelTimeSeconds),
     trafficDelaySeconds,
+    avoidHighways: Boolean(routeOptions.avoidHighways),
   }
 }
 

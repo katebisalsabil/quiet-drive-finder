@@ -33,11 +33,13 @@ function App() {
 
   // State to show any error messages from route generation
   const [routeError, setRouteError] = useState(null)
+  const [routeNotice, setRouteNotice] = useState(null)
 
   // Called when user clicks on the map
   const handleMapClick = (lat, lng) => {
     setSelectedLocation({ lat, lng })
     setRouteError(null)
+    setRouteNotice(null)
   }
 
   // Confirm the selected location as the starting point
@@ -47,6 +49,7 @@ function App() {
       setSelectedLocation(null)
       setRoutes([])
       setRouteError(null)
+      setRouteNotice(null)
       setSelectedRouteId(null)
       setHoveredRouteId(null)
     }
@@ -60,17 +63,20 @@ function App() {
     setSelectedRouteId(null)
     setHoveredRouteId(null)
     setRouteError(null)
+    setRouteNotice(null)
   }
 
   // Generate three real routes using TomTom from start → destination → start
-  const handleGenerateRoutes = async (startingPointLocation, radiusMiles) => {
+  const handleGenerateRoutes = async (startingPointLocation, radiusMiles, routeOptions = {}) => {
     if (!startingPointLocation) {
       setRouteError('Please confirm a starting point before generating routes.')
+      setRouteNotice(null)
       return
     }
 
     setIsGenerating(true)
     setRouteError(null)
+    setRouteNotice(null)
     setSelectedRouteId(null)
     setHoveredRouteId(null)
     setRoutes([])
@@ -79,11 +85,14 @@ function App() {
 
     try {
       const routePromises = destinations.map(async (destination, index) => {
-        const apiResponse = await fetchTomTomRoute([
-          startingPointLocation,
-          destination,
-          startingPointLocation,
-        ])
+        const apiResponse = await fetchTomTomRoute(
+          [
+            startingPointLocation,
+            destination,
+            startingPointLocation,
+          ],
+          routeOptions
+        )
 
         if (!apiResponse.ok) {
           throw new Error(apiResponse.message || 'TomTom could not calculate one route option.')
@@ -93,7 +102,8 @@ function App() {
           apiResponse,
           startingPointLocation,
           destination,
-          index + 1
+          index + 1,
+          routeOptions
         )
       })
 
@@ -121,7 +131,7 @@ function App() {
 
       setRoutes(newRoutes)
       setSelectedRouteId(bestRoute.id)
-      setRouteError(
+      setRouteNotice(
         failedRouteCount > 0
           ? `Generated ${routeResults.length} route option${routeResults.length === 1 ? '' : 's'}. ${failedRouteCount} option${failedRouteCount === 1 ? '' : 's'} could not be generated.`
           : null
@@ -130,6 +140,7 @@ function App() {
       setRouteError(
         error?.message || 'Unable to generate routes from TomTom. Please try again.'
       )
+      setRouteNotice(null)
       setRoutes([])
       setSelectedRouteId(null)
       setHoveredRouteId(null)
@@ -144,6 +155,7 @@ function App() {
     setSelectedRouteId(null)
     setHoveredRouteId(null)
     setRouteError(null)
+    setRouteNotice(null)
   }
 
   const handleRouteSelect = (routeId) => {
@@ -155,9 +167,9 @@ function App() {
   }
 
   // Regenerate routes using the current radius and starting point
-  const handleRegenerateRoutes = (radiusMiles) => {
+  const handleRegenerateRoutes = (radiusMiles, routeOptions = {}) => {
     if (startingPoint) {
-      handleGenerateRoutes(startingPoint, radiusMiles)
+      handleGenerateRoutes(startingPoint, radiusMiles, routeOptions)
     }
   }
 
@@ -186,6 +198,7 @@ function App() {
           onResetStartingPoint={handleResetLocation}
           isGenerating={isGenerating}
           errorMessage={routeError}
+          noticeMessage={routeNotice}
           hasRoutes={routes.length > 0}
         />
         <RouteList
