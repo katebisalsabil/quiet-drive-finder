@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import Map from './components/Map'
 import InfoPanel from './components/InfoPanel'
 import RouteGenerator from './components/RouteGenerator'
@@ -8,11 +8,15 @@ import {
   addRouteQualityScores,
   buildRouteFromTomTomResponse,
   generateDestinationPoints,
+  getPreferredMinimumTravelSeconds,
+  sortRoutesByDriveTimeFit,
 } from './utils/routeUtils'
 import { fetchTomTomRoute } from './utils/tomtomApi'
 import './App.css'
 
 const ROUTE_COUNT = 3
+const MAX_ROUTE_ATTEMPTS = 24
+const CANDIDATE_BATCH_SIZE = 4
 
 function App() {
   // State to store the currently selected location (where user clicked)
@@ -58,6 +62,18 @@ function App() {
     }
   }
 
+  // Google Places search sets the starting point right away.
+  const handlePlaceSelect = useCallback((placeLocation) => {
+    setStartingPoint(placeLocation)
+    setSelectedLocation(null)
+    setRoutes([])
+    setRouteError(null)
+    setRouteNotice(null)
+    setSelectedRouteId(null)
+    setBestQuietRouteId(null)
+    setHoveredRouteId(null)
+  }, [])
+
   // Reset all location and route state
   const handleResetLocation = () => {
     setSelectedLocation(null)
@@ -70,7 +86,7 @@ function App() {
     setRouteNotice(null)
   }
 
-  // Generate three real routes using TomTom from start → destination → start
+  // Generate up to three real round-trip routes within the selected time limit.
   const handleGenerateRoutes = async (startingPointLocation, radiusMiles, routeOptions = {}) => {
     if (!startingPointLocation) {
       setRouteError('Please confirm a starting point before generating routes.')
@@ -86,43 +102,79 @@ function App() {
     setHoveredRouteId(null)
     setRoutes([])
 
-    const destinations = generateDestinationPoints(startingPointLocation, radiusMiles, ROUTE_COUNT)
+    const maxDriveTimeMinutes = Number(routeOptions.driveTimeMinutes) || 30
+    const maxDriveTimeSeconds = maxDriveTimeMinutes * 60
+    const candidateDestinations = generateDestinationPoints(
+      startingPointLocation,
+      radiusMiles,
+      MAX_ROUTE_ATTEMPTS,
+      maxDriveTimeMinutes
+    )
+    const validRoutes = []
+    let failedRouteCount = 0
+    let overTimeLimitCount = 0
 
     try {
-      const routePromises = destinations.map(async (destination, index) => {
-        const apiResponse = await fetchTomTomRoute(
-          [
+      for (
+        let batchStart = 0;
+        batchStart < candidateDestinations.length;
+        batchStart += CANDIDATE_BATCH_SIZE
+      ) {
+        const destinationBatch = candidateDestinations.slice(
+          batchStart,
+          batchStart + CANDIDATE_BATCH_SIZE
+        )
+
+        // Check a few TomTom routes at a time so retrying more candidates does not feel too slow.
+        const routeResults = await Promise.all(
+          destinationBatch.map((destination) => requestRoundTripRoute(
             startingPointLocation,
             destination,
-            startingPointLocation,
-          ],
-          routeOptions
+            routeOptions
+          ))
         )
 
-        if (!apiResponse.ok) {
-          throw new Error(apiResponse.message || 'TomTom could not calculate one route option.')
+        for (const result of routeResults) {
+          if (!result.ok) {
+            failedRouteCount += 1
+            continue
+          }
+
+          // TomTom returns one summary for the whole start → destination → start trip.
+          if (result.route.travelTimeSeconds > maxDriveTimeSeconds) {
+            overTimeLimitCount += 1
+            continue
+          }
+
+          validRoutes.push(result.route)
         }
-
-        return buildRouteFromTomTomResponse(
-          apiResponse,
-          startingPointLocation,
-          destination,
-          index + 1,
-          routeOptions
-        )
-      })
-
-      const settledRouteResults = await Promise.allSettled(routePromises)
-      const routeResults = settledRouteResults
-        .filter((result) => result.status === 'fulfilled')
-        .map((result) => result.value)
-      const failedRouteCount = settledRouteResults.length - routeResults.length
-
-      if (routeResults.length === 0) {
-        throw new Error('No routes could be generated. Try a different radius or starting point.')
       }
 
-      const scoredRoutes = addRouteQualityScores(routeResults)
+      if (validRoutes.length === 0) {
+        throw new Error(
+          `No round-trip routes found within ${maxDriveTimeMinutes} minutes. Try a higher time limit, smaller radius, or turn off Avoid highways or Prefer local roads.`
+        )
+      }
+
+      const routeCandidates = sortRoutesByDriveTimeFit(validRoutes, maxDriveTimeMinutes).map((route, index) => ({
+        ...route,
+        id: index + 1,
+      }))
+      const scoredCandidateRoutes = addRouteQualityScores(routeCandidates)
+      const bestScoredCandidates = [...scoredCandidateRoutes]
+        .sort((firstRoute, secondRoute) => {
+          if (firstRoute.score !== secondRoute.score) {
+            return firstRoute.score - secondRoute.score
+          }
+
+          return firstRoute.trafficDelaySeconds - secondRoute.trafficDelaySeconds
+        })
+        .slice(0, ROUTE_COUNT)
+      const routesForDisplay = bestScoredCandidates.map((route, index) => ({
+        ...route,
+        id: index + 1,
+      }))
+      const scoredRoutes = addRouteQualityScores(routesForDisplay)
 
       const bestRoute = scoredRoutes.reduce((currentBest, route) => {
         return route.score < currentBest.score ? route : currentBest
@@ -138,9 +190,16 @@ function App() {
       // Leave selectedRouteId empty so the recommendation does not block the user's choice.
       setSelectedRouteId(null)
       setRouteNotice(
-        failedRouteCount > 0
-          ? `Generated ${routeResults.length} route option${routeResults.length === 1 ? '' : 's'}. ${failedRouteCount} option${failedRouteCount === 1 ? '' : 's'} could not be generated.`
-          : null
+        buildRouteNotice({
+          shownRouteCount: newRoutes.length,
+          failedRouteCount,
+          overTimeLimitCount,
+          maxDriveTimeMinutes,
+          foundOnlyShorterRoutes: foundOnlyShorterRoutes(
+            newRoutes,
+            maxDriveTimeMinutes
+          ),
+        })
       )
     } catch (error) {
       setRouteError(
@@ -154,6 +213,76 @@ function App() {
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  async function requestRoundTripRoute(startingPointLocation, destination, routeOptions) {
+    const apiResponse = await fetchTomTomRoute(
+      [
+        startingPointLocation,
+        destination,
+        startingPointLocation,
+      ],
+      routeOptions
+    )
+
+    if (!apiResponse.ok) {
+      return { ok: false }
+    }
+
+    return {
+      ok: true,
+      route: buildRouteFromTomTomResponse(
+        apiResponse,
+        startingPointLocation,
+        destination,
+        0,
+        routeOptions
+      ),
+    }
+  }
+
+  function foundOnlyShorterRoutes(routesToShow, maxDriveTimeMinutes) {
+    const preferredMinimumSeconds = getPreferredMinimumTravelSeconds(maxDriveTimeMinutes)
+
+    return routesToShow.every((route) => route.travelTimeSeconds < preferredMinimumSeconds)
+  }
+
+  function buildRouteNotice({
+    shownRouteCount,
+    failedRouteCount,
+    overTimeLimitCount,
+    maxDriveTimeMinutes,
+    foundOnlyShorterRoutes,
+  }) {
+    const noticeParts = []
+
+    if (foundOnlyShorterRoutes) {
+      noticeParts.push(
+        `We found shorter routes under your ${maxDriveTimeMinutes}-minute limit.`
+      )
+    }
+
+    if (shownRouteCount < ROUTE_COUNT) {
+      noticeParts.push(
+        `Could not find ${ROUTE_COUNT} routes within ${maxDriveTimeMinutes} minutes. Found ${shownRouteCount}. Try a higher time limit, smaller radius, or turn off Avoid highways or Prefer local roads.`
+      )
+    }
+
+    if (overTimeLimitCount > 0) {
+      noticeParts.push(
+        `${overTimeLimitCount} route option${overTimeLimitCount === 1 ? '' : 's'} over ${maxDriveTimeMinutes} minutes were skipped.`
+      )
+    }
+
+    if (failedRouteCount > 0) {
+      noticeParts.push(
+        `${failedRouteCount} route option${failedRouteCount === 1 ? '' : 's'} could not be generated.`
+      )
+    }
+
+    return noticeParts.length > 0
+      ? noticeParts.join(' ')
+      : null
   }
 
   // Clear the currently generated routes but keep the starting point
@@ -197,6 +326,7 @@ function App() {
         <InfoPanel
           selectedLocation={selectedLocation}
           startingPoint={startingPoint}
+          onPlaceSelect={handlePlaceSelect}
           onConfirmStartingPoint={handleConfirmStartingPoint}
           onResetLocation={handleResetLocation}
         />

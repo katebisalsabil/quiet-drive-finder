@@ -15,21 +15,32 @@ function RouteGenerator({
   // State for the selected radius (in miles)
   const [selectedRadius, setSelectedRadius] = useState(20)
   const [avoidHighways, setAvoidHighways] = useState(false)
+  const [preferLocalRoads, setPreferLocalRoads] = useState(false)
+  const [selectedDriveTime, setSelectedDriveTime] = useState(30)
 
   // Radius options available to the user
   const radiusOptions = [5, 10, 15, 20]
+  const driveTimeOptions = [20, 30]
 
-  // Handle the "Generate Real Routes" button click
+  function getRouteOptions() {
+    return {
+      avoidHighways,
+      preferLocalRoads,
+      driveTimeMinutes: selectedDriveTime,
+    }
+  }
+
+  // Handle the "Generate Round Trip Routes" button click
   const handleGenerateClick = () => {
     if (!startingPoint) {
       return
     }
-    onGenerateRoutes(startingPoint, selectedRadius, { avoidHighways })
+    onGenerateRoutes(startingPoint, selectedRadius, getRouteOptions())
   }
 
   // Handle the "Regenerate Routes" button click
   const handleRegenerateClick = () => {
-    onRegenerateRoutes(selectedRadius, { avoidHighways })
+    onRegenerateRoutes(selectedRadius, getRouteOptions())
   }
 
   return (
@@ -64,9 +75,26 @@ function RouteGenerator({
             </select>
           </div>
 
+          <div className="radius-selector">
+            <label htmlFor="drive-time-input">
+              <strong>Maximum round-trip drive time:</strong>
+            </label>
+            <select
+              id="drive-time-input"
+              value={selectedDriveTime}
+              onChange={(e) => setSelectedDriveTime(Number(e.target.value))}
+              className="radius-dropdown"
+            >
+              {driveTimeOptions.map((minutes) => (
+                <option key={minutes} value={minutes}>
+                  {minutes} minutes
+                </option>
+              ))}
+            </select>
+          </div>
+
           <p className="radius-description">
-            Will request 3 real driving routes using TomTom from your starting
-            point and back.
+            Will look for up to 3 real round-trip routes near, but not over, your {selectedDriveTime}-minute max.
           </p>
 
           <label className="avoid-highways-option">
@@ -82,20 +110,33 @@ function RouteGenerator({
             </span>
           </label>
 
-          {/* Primary action: Generate real routes */}
+          <label className="avoid-highways-option">
+            <input
+              type="checkbox"
+              checked={preferLocalRoads}
+              onChange={(event) => setPreferLocalRoads(event.target.checked)}
+              disabled={isGenerating}
+            />
+            <span>
+              <strong>Prefer local roads</strong>
+              <small>Quiet scoring gives extra weight to routes with fewer highway hints and smoother roads.</small>
+            </span>
+          </label>
+
+          {/* Primary action: generate real round-trip routes */}
           <button
             type="button"
             className="btn btn-generate"
             onClick={handleGenerateClick}
             disabled={isGenerating}
           >
-            {isGenerating ? 'Generating real routes...' : 'Generate Real Routes'}
+            {isGenerating ? 'Generating round trips...' : 'Generate Round Trip Routes'}
           </button>
 
           {isGenerating && (
             <p className="loading-message" aria-live="polite">
               Asking TomTom for route options
-              {avoidHighways ? ' that avoid highways when possible' : ''}. This can take a few seconds.
+              {avoidHighways || preferLocalRoads ? ' that avoid highways when possible' : ''} within your {selectedDriveTime}-minute max. This may check several destination points.
             </p>
           )}
 

@@ -1,0 +1,54 @@
+/* PlaceSearch.css - Google Places search inside the starting point panel */
+
+.place-search {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.place-search label {
+  font-size: 13px;
+  color: #334155;
+}
+
+.place-search input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  background: white;
+}
+
+.place-search input:focus {
+  outline: none;
+  border-color: #1565c0;
+  box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.14);
+}
+
+.place-search input:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+}
+
+.place-search-help,
+.place-search-status {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.place-search-help {
+  color: #64748b;
+}
+
+.place-search-status {
+  color: #475569;
+}
+
+.pac-container {
+  z-index: 2000;
+}

@@ -1,8 +1,10 @@
 import '../styles/InfoPanel.css'
+import PlaceSearch from './PlaceSearch'
 
 function InfoPanel({
   selectedLocation,
   startingPoint,
+  onPlaceSelect,
   onConfirmStartingPoint,
   onResetLocation,
 }) {
@@ -15,10 +17,12 @@ function InfoPanel({
       {/* Header */}
       <h2>Starting Point</h2>
 
+      <PlaceSearch onPlaceSelect={onPlaceSelect} />
+
       {/* Show message if no location selected */}
       {!hasSelectedLocation && !hasStartingPoint && (
         <div className="info-empty">
-          <p>Click anywhere on the map to select a starting point.</p>
+          <p>Search for a place above, or click anywhere on the map to select a starting point.</p>
         </div>
       )}
 
@@ -48,6 +52,20 @@ function InfoPanel({
       {hasStartingPoint && (
         <div className="info-confirmed">
           <h3>Starting Point Confirmed</h3>
+          {(startingPoint.placeName || startingPoint.address) && (
+            <div className="place-details">
+              {startingPoint.placeName && (
+                <p>
+                  <strong>Place:</strong> {startingPoint.placeName}
+                </p>
+              )}
+              {startingPoint.address && (
+                <p>
+                  <strong>Address:</strong> {startingPoint.address}
+                </p>
+              )}
+            </div>
+          )}
           <div className="coordinates">
             <p>
               <strong>Latitude:</strong> {startingPoint.lat.toFixed(6)}

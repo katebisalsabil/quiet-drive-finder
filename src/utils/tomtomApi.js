@@ -26,7 +26,8 @@ export async function fetchTomTomRoute(points, routeOptions = {}) {
   })
 
   // TomTom calls highways "motorways" in the avoid setting.
-  if (routeOptions.avoidHighways) {
+  // "Prefer local roads" uses the same request hint, then scoring gives local roads extra weight.
+  if (routeOptions.avoidHighways || routeOptions.preferLocalRoads) {
     searchParams.append('avoid', 'motorways')
   }
   const url = `https://api.tomtom.com/routing/1/calculateRoute/${locationString}/json?${searchParams.toString()}`
@@ -86,12 +87,25 @@ export async function fetchTomTomRoute(points, routeOptions = {}) {
   const legShapes = extractLegShapes(route)
   const routeShape = legShapes.length > 0 ? combineLegShapes(legShapes) : extractRouteShape(route)
 
+  if (routeShape.length === 0) {
+    return {
+      ok: false,
+      status: response.status,
+      data,
+      routeShape: [],
+      legShapes: [],
+      summary: null,
+      message: 'TomTom returned a route summary without road points.',
+    }
+  }
+
   return {
     ok: response.ok,
     status: response.status,
     data,
     routeShape,
     legShapes,
+    instructions: extractGuidanceInstructions(route),
     summary: route?.summary,
   }
 }
@@ -150,6 +164,40 @@ function combineLegShapes(legShapes) {
   })
 
   return combinedShape
+}
+
+function textOrEmpty(value) {
+  return typeof value === 'string' ? value : ''
+}
+
+function arrayOfText(value) {
+  return Array.isArray(value) ? value.map(String) : []
+}
+
+function extractGuidanceInstructions(route) {
+  const instructions = route?.guidance?.instructions
+
+  if (!Array.isArray(instructions)) {
+    return []
+  }
+
+  return instructions
+    .map((instruction) => ({
+      message: textOrEmpty(instruction.message),
+      maneuver: textOrEmpty(instruction.maneuver),
+      street: textOrEmpty(instruction.street || instruction.roadName || instruction.streetName),
+      signpostText: textOrEmpty(instruction.signpostText || instruction.signpost || instruction.towards),
+      roadNumbers: arrayOfText(instruction.roadNumbers),
+    }))
+    .filter((instruction) => {
+      return (
+        instruction.message ||
+        instruction.maneuver ||
+        instruction.street ||
+        instruction.signpostText ||
+        instruction.roadNumbers.length > 0
+      )
+    })
 }
 
 function extractRouteShape(route) {

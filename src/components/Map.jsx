@@ -71,6 +71,24 @@ function RouteZoomHandler({ routes, selectedRouteId }) {
   return null
 }
 
+function StartingPointFocusHandler({ startingPoint }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!startingPoint) {
+      return
+    }
+
+    // When Google search sets a starting point, move Leaflet to that place.
+    map.flyTo([startingPoint.lat, startingPoint.lng], 14, {
+      animate: true,
+      duration: 0.7,
+    })
+  }, [map, startingPoint])
+
+  return null
+}
+
 function isCloseToPoint(pathPoint, mapPoint) {
   return (
     Math.abs(pathPoint[0] - mapPoint.lat) < 0.0002 &&
@@ -190,6 +208,7 @@ function Map({
         {/* MapClickHandler listens for clicks on the map */}
         {/* When user clicks, it calls onMapClick with the coordinates */}
         <MapClickHandler onMapClick={onMapClick} />
+        <StartingPointFocusHandler startingPoint={startingPoint} />
         <RouteZoomHandler routes={routes} selectedRouteId={selectedRouteId} />
 
         {/* Draw route lines for each generated route */}
@@ -255,6 +274,8 @@ function Map({
             <Popup>
               <div>
                 <h3>Starting Point</h3>
+                {startingPoint.placeName && <p>{startingPoint.placeName}</p>}
+                {startingPoint.address && <p>{startingPoint.address}</p>}
                 <p>Latitude: {startingPoint.lat.toFixed(4)}</p>
                 <p>Longitude: {startingPoint.lng.toFixed(4)}</p>
               </div>

@@ -1,4 +1,5 @@
 import '../styles/RouteList.css'
+import { buildGoogleMapsDirectionsUrl } from '../utils/googleMapsUrl'
 
 function formatTrafficDelay(seconds) {
   if (!seconds) {
@@ -10,6 +11,16 @@ function formatTrafficDelay(seconds) {
   }
 
   return `${Math.round(seconds / 60)} min`
+}
+
+function formatRoundTripTime(route) {
+  const roundedMinutes = Math.round(route.travelTimeSeconds / 60)
+
+  if (!route.driveTimeLimitMinutes) {
+    return `${roundedMinutes} min`
+  }
+
+  return `${roundedMinutes} min of ${route.driveTimeLimitMinutes} min max`
 }
 
 function RouteList({
@@ -26,7 +37,7 @@ function RouteList({
       {/* Show message if no routes generated */}
       {routes.length === 0 && (
         <div className="empty-state">
-          <p>No routes generated yet. Click "Generate Real Routes" to create some options!</p>
+          <p>No routes generated yet. Click "Generate Round Trip Routes" to create some options!</p>
         </div>
       )}
 
@@ -62,6 +73,8 @@ function RouteCard({
   onRouteHover,
   onRouteSelect,
 }) {
+  const googleMapsUrl = buildGoogleMapsDirectionsUrl(route)
+
   return (
     <li
       className={`route-item ${isSelected ? 'selected' : ''} ${isBestQuietRoute ? 'best' : ''}`}
@@ -89,6 +102,7 @@ function RouteCard({
             {isSelected && <span className="selected-label">Selected route</span>}
             {isBestQuietRoute && <span className="best-label">Best quiet route</span>}
             {route.avoidHighways && <span className="option-label">Avoids highways</span>}
+            {route.preferLocalRoads && <span className="option-label">Prefers local roads</span>}
           </div>
         </div>
         <span className="distance-badge">{route.distanceMiles} mi</span>
@@ -96,8 +110,8 @@ function RouteCard({
       <div className="route-details">
         <div className="route-stat-grid">
           <div>
-            <span>Drive time</span>
-            <strong>{route.travelTimeMinutes} min</strong>
+            <span>Round-trip time:</span>
+            <strong>{formatRoundTripTime(route)}</strong>
           </div>
           <div>
             <span>Traffic delay</span>
@@ -112,6 +126,25 @@ function RouteCard({
         </p>
         <p className="route-description">
           Real TomTom route from your starting point and back.
+        </p>
+        <p className="quiet-score-note">
+          {route.quietScoreExplanation || 'Quiet score based on traffic, road type, and overlap.'}
+        </p>
+        <button
+          type="button"
+          className="google-maps-button"
+          onClick={(event) => {
+            event.stopPropagation()
+            window.open(googleMapsUrl, '_blank', 'noopener,noreferrer')
+          }}
+          onKeyDown={(event) => {
+            event.stopPropagation()
+          }}
+        >
+          Open in Google Maps
+        </button>
+        <p className="google-maps-note">
+          Google Maps may slightly adjust the route.
         </p>
       </div>
     </li>

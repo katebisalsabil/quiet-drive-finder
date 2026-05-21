@@ -229,6 +229,42 @@
   border-top: 1px solid #f0f0f0;
 }
 
+.quiet-score-note {
+  color: #475569;
+  font-size: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.google-maps-button {
+  width: 100%;
+  margin-top: 10px;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 12px;
+  background: #1565c0;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.google-maps-button:hover,
+.google-maps-button:focus {
+  background: #0f4f99;
+  box-shadow: 0 2px 8px rgba(15, 79, 153, 0.2);
+  outline: none;
+}
+
+.google-maps-note {
+  color: #64748b;
+  font-size: 12px;
+  text-align: center;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
   .route-list-panel {
