@@ -24,8 +24,10 @@ function App() {
   // State to store the generated routes
   const [routes, setRoutes] = useState([])
 
-  // State to track the route selected by click or hover
+  // selectedRouteId is the route the user clicked.
+  // bestQuietRouteId is the route the app recommends.
   const [selectedRouteId, setSelectedRouteId] = useState(null)
+  const [bestQuietRouteId, setBestQuietRouteId] = useState(null)
   const [hoveredRouteId, setHoveredRouteId] = useState(null)
 
   // State to track if we are loading routes from TomTom
@@ -51,6 +53,7 @@ function App() {
       setRouteError(null)
       setRouteNotice(null)
       setSelectedRouteId(null)
+      setBestQuietRouteId(null)
       setHoveredRouteId(null)
     }
   }
@@ -61,6 +64,7 @@ function App() {
     setStartingPoint(null)
     setRoutes([])
     setSelectedRouteId(null)
+    setBestQuietRouteId(null)
     setHoveredRouteId(null)
     setRouteError(null)
     setRouteNotice(null)
@@ -78,6 +82,7 @@ function App() {
     setRouteError(null)
     setRouteNotice(null)
     setSelectedRouteId(null)
+    setBestQuietRouteId(null)
     setHoveredRouteId(null)
     setRoutes([])
 
@@ -125,12 +130,13 @@ function App() {
 
       const newRoutes = scoredRoutes.map((route, index) => ({
         ...route,
-        isBest: route.id === bestRoute.id,
         color: ROUTE_COLORS[index % ROUTE_COLORS.length],
       }))
 
       setRoutes(newRoutes)
-      setSelectedRouteId(bestRoute.id)
+      setBestQuietRouteId(bestRoute.id)
+      // Leave selectedRouteId empty so the recommendation does not block the user's choice.
+      setSelectedRouteId(null)
       setRouteNotice(
         failedRouteCount > 0
           ? `Generated ${routeResults.length} route option${routeResults.length === 1 ? '' : 's'}. ${failedRouteCount} option${failedRouteCount === 1 ? '' : 's'} could not be generated.`
@@ -143,6 +149,7 @@ function App() {
       setRouteNotice(null)
       setRoutes([])
       setSelectedRouteId(null)
+      setBestQuietRouteId(null)
       setHoveredRouteId(null)
     } finally {
       setIsGenerating(false)
@@ -153,6 +160,7 @@ function App() {
   const handleClearRoutes = () => {
     setRoutes([])
     setSelectedRouteId(null)
+    setBestQuietRouteId(null)
     setHoveredRouteId(null)
     setRouteError(null)
     setRouteNotice(null)
@@ -180,7 +188,9 @@ function App() {
         startingPoint={startingPoint}
         routes={routes}
         selectedRouteId={selectedRouteId}
+        bestQuietRouteId={bestQuietRouteId}
         hoveredRouteId={hoveredRouteId}
+        onRouteSelect={handleRouteSelect}
         onMapClick={handleMapClick}
       />
       <div className="right-panels">
@@ -206,6 +216,7 @@ function App() {
           onRouteHover={handleRouteHover}
           onRouteSelect={handleRouteSelect}
           selectedRouteId={selectedRouteId}
+          bestQuietRouteId={bestQuietRouteId}
         />
       </div>
     </div>

@@ -99,13 +99,11 @@ function getDisplayPath(route) {
   })
 }
 
-function getRouteLineOptions(route, isSelected, isHovered) {
-  const isBest = route.isBest
-
+function getRouteLineOptions(route, isSelected, isHovered, isBestQuietRoute) {
   return {
     color: route.color || '#4CAF50',
-    weight: isSelected ? 4.5 : isHovered ? 4 : isBest ? 3.5 : 3,
-    opacity: isSelected ? 0.82 : isHovered ? 0.76 : isBest ? 0.68 : 0.6,
+    weight: isSelected ? 5 : isHovered ? 4.5 : isBestQuietRoute ? 3.6 : 3,
+    opacity: isSelected ? 0.92 : isHovered ? 0.82 : isBestQuietRoute ? 0.7 : 0.58,
     lineCap: 'round',
     lineJoin: 'round',
   }
@@ -114,8 +112,8 @@ function getRouteLineOptions(route, isSelected, isHovered) {
 function getRouteHighlightOptions(route, isSelected) {
   return {
     color: route.color || '#4CAF50',
-    weight: isSelected ? 8 : 6,
-    opacity: isSelected ? 0.14 : 0.09,
+    weight: isSelected ? 10 : 6,
+    opacity: isSelected ? 0.2 : 0.09,
     lineCap: 'round',
     lineJoin: 'round',
   }
@@ -135,7 +133,7 @@ function RouteLegend({ routes }) {
             <span className="legend-color" style={{ backgroundColor: route.color }} />
             <span>
               Route {route.id}
-              {route.isBest ? ' (Best quiet route)' : ''}
+              {route.isBestQuietRoute ? ' (Best quiet route)' : ''}
             </span>
           </div>
         ))}
@@ -150,7 +148,9 @@ function Map({
   startingPoint,
   routes,
   selectedRouteId,
+  bestQuietRouteId,
   hoveredRouteId,
+  onRouteSelect,
   onMapClick,
 }) {
   // Determine which location to show on map
@@ -196,10 +196,17 @@ function Map({
         {/* Each route is a round trip: start → destination → start */}
         {routesForDrawing.map((route) => {
           const isSelected = selectedRouteId === route.id
+          const isBestQuietRoute = bestQuietRouteId === route.id
           const isHovered = hoveredRouteId === route.id
           const isActive = isSelected || isHovered
           const displayPath = getDisplayPath(route)
-          const lineOptions = getRouteLineOptions(route, isSelected, isHovered)
+          const lineOptions = getRouteLineOptions(route, isSelected, isHovered, isBestQuietRoute)
+          // Clicking a route line selects that route, just like clicking its card.
+          const routeClickHandlers = {
+            click() {
+              onRouteSelect(route.id)
+            },
+          }
 
           return (
             <Fragment key={`route-wrapper-${route.id}`}>
@@ -208,6 +215,7 @@ function Map({
                   key={`route-soft-highlight-${route.id}`}
                   positions={displayPath}
                   pathOptions={getRouteHighlightOptions(route, isSelected)}
+                  eventHandlers={routeClickHandlers}
                   smoothFactor={1.3}
                 />
               )}
@@ -215,6 +223,7 @@ function Map({
                 key={`route-${route.id}`}
                 positions={displayPath}
                 pathOptions={lineOptions}
+                eventHandlers={routeClickHandlers}
                 smoothFactor={1.3}
               />
             </Fragment>
@@ -280,7 +289,12 @@ function Map({
           </Marker>
         )}
       </MapContainer>
-      <RouteLegend routes={routes} />
+      <RouteLegend
+        routes={routes.map((route) => ({
+          ...route,
+          isBestQuietRoute: bestQuietRouteId === route.id,
+        }))}
+      />
     </div>
   )
 }

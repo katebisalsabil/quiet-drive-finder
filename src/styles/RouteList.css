@@ -87,9 +87,9 @@
 }
 
 .route-item.selected {
-  border-color: #334155;
-  background: #f8fafc;
-  box-shadow: 0 2px 10px rgba(51, 65, 85, 0.14);
+  border-color: #1565C0;
+  background: #f0f7ff;
+  box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.16), 0 3px 12px rgba(21, 101, 192, 0.18);
 }
 
 .route-strip {
@@ -120,6 +120,7 @@
   margin-top: 6px;
 }
 
+.selected-label,
 .best-label,
 .option-label {
   display: inline-block;
@@ -127,6 +128,11 @@
   font-size: 11px;
   font-weight: 700;
   border-radius: 999px;
+}
+
+.selected-label {
+  background: #1565C0;
+  color: white;
 }
 
 .best-label {
@@ -145,8 +151,8 @@
 }
 
 .route-item.best.selected {
-  border-color: #334155;
-  background: #f8fafc;
+  border-color: #1565C0;
+  background: #f0f7ff;
 }
 
 .distance-badge {
@@ -159,7 +165,7 @@
 }
 
 .route-item.selected .distance-badge {
-  background: #334155;
+  background: #1565C0;
 }
 
 /* Route details */
