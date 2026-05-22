@@ -1,4 +1,4 @@
-/* InfoPanel.css - Styles for the information panel showing selected coordinates */
+/* InfoPanel.css - Styles for the starting point panel */
 
 .info-panel {
   width: 100%;
@@ -29,7 +29,7 @@
   color: #334155;
 }
 
-/* Empty state - no location selected */
+/* Empty state - no starting point selected */
 .info-empty {
   text-align: center;
   color: #666;
@@ -42,8 +42,7 @@
   line-height: 1.5;
 }
 
-/* Selected location display */
-.info-selected,
+/* Starting point display */
 .info-confirmed {
   padding: 10px 0;
 }
@@ -87,7 +86,7 @@
   color: #334155;
 }
 
-/* Confirmation message */
+/* Starting point message */
 .info-message {
   font-size: 13px;
   color: #2f6f4e;
@@ -96,25 +95,6 @@
   background: #edf7f0;
   border: 1px solid #cce8d5;
   border-radius: 4px;
-  line-height: 1.4;
-}
-
-/* New selection warning */
-.info-new-selection {
-  margin-top: 15px;
-  padding-top: 15px;
-}
-
-.info-new-selection hr {
-  border: none;
-  border-top: 1px solid #ddd;
-  margin: 0 0 15px 0;
-}
-
-.info-new-selection p {
-  font-size: 13px;
-  color: #666;
-  margin: 10px 0;
   line-height: 1.4;
 }
 
@@ -138,16 +118,6 @@
 
 .info-panel .btn:active {
   transform: translateY(0);
-}
-
-/* Primary button - for confirming selection */
-.info-panel .btn-primary {
-  background: #2E7D32;
-  color: white;
-}
-
-.info-panel .btn-primary:hover {
-  background: #256c2a;
 }
 
 /* Secondary button - for reset */

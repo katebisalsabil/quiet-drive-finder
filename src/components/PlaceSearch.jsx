@@ -62,7 +62,7 @@ function PlaceSearch({ onPlaceSelect }) {
   return (
     <div className="place-search">
       <label htmlFor="place-search-input">
-        <strong>Search address or place</strong>
+        <strong>Search starting address or place</strong>
       </label>
       <div className="place-search-row">
         <input

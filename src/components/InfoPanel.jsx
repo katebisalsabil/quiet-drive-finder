@@ -2,110 +2,59 @@ import '../styles/InfoPanel.css'
 import PlaceSearch from './PlaceSearch'
 
 function InfoPanel({
-  selectedLocation,
-  startingPoint,
+  selectedStartingPoint,
+  confirmedStartingPoint,
   onPlaceSelect,
-  onConfirmStartingPoint,
   onResetLocation,
 }) {
-  const hasSelectedLocation = Boolean(selectedLocation)
-  const hasStartingPoint = Boolean(startingPoint)
-  const hasNewSelection = hasSelectedLocation && hasStartingPoint
+  const hasStartingPoint = Boolean(confirmedStartingPoint)
+  const pointToShow = confirmedStartingPoint || selectedStartingPoint
 
   return (
     <div className="info-panel">
       {/* Header */}
-      <h2>Starting Point</h2>
+      <h2>Starting point</h2>
 
       <PlaceSearch onPlaceSelect={onPlaceSelect} />
 
-      {/* Show message if no location selected */}
-      {!hasSelectedLocation && !hasStartingPoint && (
+      {/* Search and map clicks both set the starting point immediately. */}
+      {!hasStartingPoint && (
         <div className="info-empty">
-          <p>Search for a place above, or click anywhere on the map to select a starting point.</p>
+          <p>Search for a starting place above, or click the map to set one.</p>
         </div>
       )}
 
-      {/* Show selected location details before a starting point is confirmed */}
-      {hasSelectedLocation && !hasStartingPoint && (
-        <div className="info-selected">
-          <h3>Selected Location</h3>
-          <div className="coordinates">
-            <p>
-              <strong>Latitude:</strong> {selectedLocation.lat.toFixed(6)}
-            </p>
-            <p>
-              <strong>Longitude:</strong> {selectedLocation.lng.toFixed(6)}
-            </p>
-          </div>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onConfirmStartingPoint}
-          >
-            Use this as my starting point
-          </button>
-        </div>
-      )}
-
-      {/* Show confirmed starting point */}
-      {hasStartingPoint && (
+      {/* Show the point that TomTom will use as the start and return point. */}
+      {hasStartingPoint && pointToShow && (
         <div className="info-confirmed">
-          <h3>Starting Point Confirmed</h3>
-          {(startingPoint.placeName || startingPoint.address) && (
+          <h3>Starting point</h3>
+          {(pointToShow.placeName || pointToShow.address) && (
             <div className="place-details">
-              {startingPoint.placeName && (
+              {pointToShow.placeName && (
                 <p>
-                  <strong>Place:</strong> {startingPoint.placeName}
+                  <strong>Place:</strong> {pointToShow.placeName}
                 </p>
               )}
-              {startingPoint.address && (
+              {pointToShow.address && (
                 <p>
-                  <strong>Address:</strong> {startingPoint.address}
+                  <strong>Address:</strong> {pointToShow.address}
                 </p>
               )}
             </div>
           )}
           <div className="coordinates">
             <p>
-              <strong>Latitude:</strong> {startingPoint.lat.toFixed(6)}
+              <strong>Latitude:</strong> {pointToShow.lat.toFixed(6)}
             </p>
             <p>
-              <strong>Longitude:</strong> {startingPoint.lng.toFixed(6)}
+              <strong>Longitude:</strong> {pointToShow.lng.toFixed(6)}
             </p>
           </div>
           <p className="info-message">
-            This is your starting point for calculating quiet routes.
+            Round trips will start here, visit a generated destination, and return here.
           </p>
           <button type="button" className="btn btn-secondary" onClick={onResetLocation}>
             Reset starting point
-          </button>
-        </div>
-      )}
-
-      {/* Show this if user clicks a new map spot after confirming a start */}
-      {hasNewSelection && (
-        <div className="info-new-selection">
-          <hr />
-          <h3>New Location Selected</h3>
-          <div className="coordinates">
-            <p>
-              <strong>Latitude:</strong> {selectedLocation.lat.toFixed(6)}
-            </p>
-            <p>
-              <strong>Longitude:</strong> {selectedLocation.lng.toFixed(6)}
-            </p>
-          </div>
-          <p>
-            You can click the button below to update your starting point to this
-            new location.
-          </p>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onConfirmStartingPoint}
-          >
-            Update starting point to here
           </button>
         </div>
       )}

@@ -19,11 +19,11 @@ const MAX_ROUTE_ATTEMPTS = 24
 const CANDIDATE_BATCH_SIZE = 4
 
 function App() {
-  // State to store the currently selected location (where user clicked)
-  const [selectedLocation, setSelectedLocation] = useState(null)
+  // selectedStartingPoint is the latest point chosen from search or map click.
+  const [selectedStartingPoint, setSelectedStartingPoint] = useState(null)
 
-  // State to store the confirmed starting point
-  const [startingPoint, setStartingPoint] = useState(null)
+  // confirmedStartingPoint is the point TomTom uses for every round trip.
+  const [confirmedStartingPoint, setConfirmedStartingPoint] = useState(null)
 
   // State to store the generated routes
   const [routes, setRoutes] = useState([])
@@ -43,29 +43,22 @@ function App() {
 
   // Called when user clicks on the map
   const handleMapClick = (lat, lng) => {
-    setSelectedLocation({ lat, lng })
+    const clickedStartingPoint = { lat, lng }
+
+    setSelectedStartingPoint(clickedStartingPoint)
+    setConfirmedStartingPoint(clickedStartingPoint)
+    setRoutes([])
     setRouteError(null)
     setRouteNotice(null)
-  }
-
-  // Confirm the selected location as the starting point
-  const handleConfirmStartingPoint = () => {
-    if (selectedLocation) {
-      setStartingPoint(selectedLocation)
-      setSelectedLocation(null)
-      setRoutes([])
-      setRouteError(null)
-      setRouteNotice(null)
-      setSelectedRouteId(null)
-      setBestQuietRouteId(null)
-      setHoveredRouteId(null)
-    }
+    setSelectedRouteId(null)
+    setBestQuietRouteId(null)
+    setHoveredRouteId(null)
   }
 
   // Address/place search sets the starting point right away.
   const handlePlaceSelect = useCallback((placeLocation) => {
-    setStartingPoint(placeLocation)
-    setSelectedLocation(null)
+    setSelectedStartingPoint(placeLocation)
+    setConfirmedStartingPoint(placeLocation)
     setRoutes([])
     setRouteError(null)
     setRouteNotice(null)
@@ -76,8 +69,8 @@ function App() {
 
   // Reset all location and route state
   const handleResetLocation = () => {
-    setSelectedLocation(null)
-    setStartingPoint(null)
+    setSelectedStartingPoint(null)
+    setConfirmedStartingPoint(null)
     setRoutes([])
     setSelectedRouteId(null)
     setBestQuietRouteId(null)
@@ -89,7 +82,7 @@ function App() {
   // Generate up to three real round-trip routes within the selected time limit.
   const handleGenerateRoutes = async (startingPointLocation, radiusMiles, routeOptions = {}) => {
     if (!startingPointLocation) {
-      setRouteError('Please confirm a starting point before generating routes.')
+      setRouteError('Please search or click a starting point first.')
       setRouteNotice(null)
       return
     }
@@ -305,16 +298,16 @@ function App() {
 
   // Regenerate routes using the current radius and starting point
   const handleRegenerateRoutes = (radiusMiles, routeOptions = {}) => {
-    if (startingPoint) {
-      handleGenerateRoutes(startingPoint, radiusMiles, routeOptions)
+    if (confirmedStartingPoint) {
+      handleGenerateRoutes(confirmedStartingPoint, radiusMiles, routeOptions)
     }
   }
 
   return (
     <div className="app-container">
       <Map
-        selectedLocation={selectedLocation}
-        startingPoint={startingPoint}
+        selectedStartingPoint={selectedStartingPoint}
+        confirmedStartingPoint={confirmedStartingPoint}
         routes={routes}
         selectedRouteId={selectedRouteId}
         bestQuietRouteId={bestQuietRouteId}
@@ -324,14 +317,13 @@ function App() {
       />
       <div className="right-panels">
         <InfoPanel
-          selectedLocation={selectedLocation}
-          startingPoint={startingPoint}
+          selectedStartingPoint={selectedStartingPoint}
+          confirmedStartingPoint={confirmedStartingPoint}
           onPlaceSelect={handlePlaceSelect}
-          onConfirmStartingPoint={handleConfirmStartingPoint}
           onResetLocation={handleResetLocation}
         />
         <RouteGenerator
-          startingPoint={startingPoint}
+          startingPoint={confirmedStartingPoint}
           onGenerateRoutes={handleGenerateRoutes}
           onClearRoutes={handleClearRoutes}
           onRegenerateRoutes={handleRegenerateRoutes}

@@ -30,7 +30,7 @@ function RouteGenerator({
     }
   }
 
-  // Handle the "Generate Round Trip Routes" button click
+  // Generate from the confirmed starting point and return to that same point.
   const handleGenerateClick = () => {
     if (!startingPoint) {
       return
@@ -50,7 +50,7 @@ function RouteGenerator({
       {/* Show error if no starting point selected */}
       {!startingPoint && (
         <div className="error-message" aria-live="polite">
-          <p>Please click the map and confirm a starting point first.</p>
+          <p>Please search or click a starting point first.</p>
         </div>
       )}
 
@@ -130,7 +130,7 @@ function RouteGenerator({
             onClick={handleGenerateClick}
             disabled={isGenerating}
           >
-            {isGenerating ? 'Generating round trips...' : 'Generate Round Trip Routes'}
+            {isGenerating ? 'Generating round trips...' : 'Generate round trip from this starting point'}
           </button>
 
           {isGenerating && (

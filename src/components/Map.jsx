@@ -71,20 +71,20 @@ function RouteZoomHandler({ routes, selectedRouteId }) {
   return null
 }
 
-function StartingPointFocusHandler({ startingPoint }) {
+function StartingPointFocusHandler({ confirmedStartingPoint }) {
   const map = useMap()
 
   useEffect(() => {
-    if (!startingPoint) {
+    if (!confirmedStartingPoint) {
       return
     }
 
-    // When Google search sets a starting point, move Leaflet to that place.
-    map.flyTo([startingPoint.lat, startingPoint.lng], 14, {
+    // When search or map click sets a starting point, move Leaflet to that place.
+    map.flyTo([confirmedStartingPoint.lat, confirmedStartingPoint.lng], 14, {
       animate: true,
       duration: 0.7,
     })
-  }, [map, startingPoint])
+  }, [map, confirmedStartingPoint])
 
   return null
 }
@@ -162,8 +162,8 @@ function RouteLegend({ routes }) {
 }
 
 function Map({
-  selectedLocation,
-  startingPoint,
+  selectedStartingPoint,
+  confirmedStartingPoint,
   routes,
   selectedRouteId,
   bestQuietRouteId,
@@ -172,8 +172,8 @@ function Map({
   onMapClick,
 }) {
   // Determine which location to show on map
-  // Priority: startingPoint (confirmed) > selectedLocation (temporary) > default
-  const displayLocation = startingPoint || selectedLocation || DEFAULT_LOCATION
+  // Priority: confirmed starting point > selected starting point > default map center.
+  const displayLocation = confirmedStartingPoint || selectedStartingPoint || DEFAULT_LOCATION
   const mapCenter = Array.isArray(displayLocation)
     ? displayLocation
     : [displayLocation.lat, displayLocation.lng]
@@ -208,7 +208,7 @@ function Map({
         {/* MapClickHandler listens for clicks on the map */}
         {/* When user clicks, it calls onMapClick with the coordinates */}
         <MapClickHandler onMapClick={onMapClick} />
-        <StartingPointFocusHandler startingPoint={startingPoint} />
+        <StartingPointFocusHandler confirmedStartingPoint={confirmedStartingPoint} />
         <RouteZoomHandler routes={routes} selectedRouteId={selectedRouteId} />
 
         {/* Draw route lines for each generated route */}
@@ -222,7 +222,10 @@ function Map({
           const lineOptions = getRouteLineOptions(route, isSelected, isHovered, isBestQuietRoute)
           // Clicking a route line selects that route, just like clicking its card.
           const routeClickHandlers = {
-            click() {
+            click(event) {
+              if (event.originalEvent) {
+                L.DomEvent.stopPropagation(event.originalEvent)
+              }
               onRouteSelect(route.id)
             },
           }
@@ -269,42 +272,28 @@ function Map({
 
         {/* Show confirmed starting point marker if it exists */}
         {/* Green marker to show this is the official starting point */}
-        {startingPoint && (
-          <Marker position={[startingPoint.lat, startingPoint.lng]} icon={confirmedIcon}>
+        {confirmedStartingPoint && (
+          <Marker position={[confirmedStartingPoint.lat, confirmedStartingPoint.lng]} icon={confirmedIcon}>
             <Popup>
               <div>
-                <h3>Starting Point</h3>
-                {startingPoint.placeName && <p>{startingPoint.placeName}</p>}
-                {startingPoint.address && <p>{startingPoint.address}</p>}
-                <p>Latitude: {startingPoint.lat.toFixed(4)}</p>
-                <p>Longitude: {startingPoint.lng.toFixed(4)}</p>
+                <h3>Starting point</h3>
+                {confirmedStartingPoint.placeName && <p>{confirmedStartingPoint.placeName}</p>}
+                {confirmedStartingPoint.address && <p>{confirmedStartingPoint.address}</p>}
+                <p>Latitude: {confirmedStartingPoint.lat.toFixed(4)}</p>
+                <p>Longitude: {confirmedStartingPoint.lng.toFixed(4)}</p>
               </div>
             </Popup>
           </Marker>
         )}
 
-        {/* Show selected location marker if it exists (and is different from starting point) */}
-        {/* Blue marker to show this is a temporary selection */}
-        {selectedLocation && !startingPoint && (
-          <Marker position={[selectedLocation.lat, selectedLocation.lng]} icon={selectedIcon}>
+        {/* Fallback marker if a future flow selects a point before confirming it. */}
+        {selectedStartingPoint && !confirmedStartingPoint && (
+          <Marker position={[selectedStartingPoint.lat, selectedStartingPoint.lng]} icon={selectedIcon}>
             <Popup>
               <div>
-                <h3>Selected Location</h3>
-                <p>Latitude: {selectedLocation.lat.toFixed(4)}</p>
-                <p>Longitude: {selectedLocation.lng.toFixed(4)}</p>
-              </div>
-            </Popup>
-          </Marker>
-        )}
-
-        {/* Show both markers if both exist (selected different from starting point) */}
-        {selectedLocation && startingPoint && (
-          <Marker position={[selectedLocation.lat, selectedLocation.lng]} icon={selectedIcon}>
-            <Popup>
-              <div>
-                <h3>New Selection</h3>
-                <p>Latitude: {selectedLocation.lat.toFixed(4)}</p>
-                <p>Longitude: {selectedLocation.lng.toFixed(4)}</p>
+                <h3>Selected starting point</h3>
+                <p>Latitude: {selectedStartingPoint.lat.toFixed(4)}</p>
+                <p>Longitude: {selectedStartingPoint.lng.toFixed(4)}</p>
               </div>
             </Popup>
           </Marker>

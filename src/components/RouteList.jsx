@@ -23,6 +23,22 @@ function formatRoundTripTime(route) {
   return `${roundedMinutes} min of ${route.driveTimeLimitMinutes} min max`
 }
 
+function formatStartingPoint(point) {
+  if (!point) {
+    return 'Starting point'
+  }
+
+  if (point.placeName && point.address && point.placeName !== point.address) {
+    return `${point.placeName} - ${point.address}`
+  }
+
+  if (point.placeName || point.address) {
+    return point.placeName || point.address
+  }
+
+  return `${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}`
+}
+
 function RouteList({
   routes,
   onRouteHover,
@@ -37,7 +53,7 @@ function RouteList({
       {/* Show message if no routes generated */}
       {routes.length === 0 && (
         <div className="empty-state">
-          <p>No routes generated yet. Click "Generate Round Trip Routes" to create some options!</p>
+          <p>No routes generated yet. Choose a starting point, then generate a round trip.</p>
         </div>
       )}
 
@@ -118,6 +134,9 @@ function RouteCard({
             <strong>{formatTrafficDelay(route.trafficDelaySeconds)}</strong>
           </div>
         </div>
+        <p className="route-starting-point">
+          <strong>Round trip from:</strong> {formatStartingPoint(route.startingPoint)}
+        </p>
         <p className="destination-label">
           <strong>Destination</strong>
         </p>
@@ -125,7 +144,7 @@ function RouteCard({
           {route.destination.lat.toFixed(4)}, {route.destination.lng.toFixed(4)}
         </p>
         <p className="route-description">
-          Real TomTom route from your starting point and back.
+          Real TomTom route from this starting point and back.
         </p>
         <p className="quiet-score-note">
           {route.quietScoreExplanation || 'Quiet score based on traffic, road type, and overlap.'}

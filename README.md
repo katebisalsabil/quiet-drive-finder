@@ -8,8 +8,8 @@ The app runs fully in the browser. It uses Leaflet and OpenStreetMap for the map
 
 - Interactive Leaflet map with OpenStreetMap tiles.
 - TomTom address/place search for addresses, businesses, schools, stores, and landmarks.
-- Click the map to choose a starting point.
-- Confirm, update, or reset the starting point.
+- Search or click the map to set the starting point.
+- Reset the starting point when you want to start over.
 - Choose a route radius: 5, 10, 15, or 20 miles.
 - Choose a maximum round-trip drive time: 20 or 30 minutes.
 - Prefer routes close to that maximum while never showing routes over it.
@@ -17,7 +17,7 @@ The app runs fully in the browser. It uses Leaflet and OpenStreetMap for the map
 - Optionally ask TomTom to avoid highways when possible.
 - Optionally prefer local roads when ranking quieter routes.
 - Generate up to 3 real round-trip route options with TomTom.
-- Show route cards with round-trip time, max time, distance, traffic delay, and destination coordinates.
+- Show route cards with the starting point, round-trip time, max time, distance, traffic delay, and destination coordinates.
 - Explain that quiet scoring uses traffic, road type, turns, and route overlap.
 - Label the current best quiet route.
 - Hover a route card to lightly preview that route on the map.
@@ -53,9 +53,11 @@ The real `.env` and `.env.local` files are ignored by Git and should not be comm
 
 Important: because this is a browser-only app, the TomTom key is used by frontend code. The app does not print the key in the UI or console, but a public production app should use account restrictions or a backend later.
 
-## Address Search
+## Starting Point Search
 
-The `Search address or place` box uses TomTom Search API with the same `VITE_TOMTOM_API_KEY` used for routing. Type an address or place name, press Enter or click `Search`, then choose one of the results. The selected result becomes the confirmed starting point and moves the Leaflet map there.
+The `Search starting address or place` box uses TomTom Search API with the same `VITE_TOMTOM_API_KEY` used for routing. Type an address or place name, press Enter or click `Search`, then choose one of the results. The selected result becomes the starting point, clears old routes, and moves the Leaflet map there.
+
+Clicking the map also sets that clicked spot as the starting point and clears old routes. The app does not use browser current location automatically.
 
 If the key is missing, the app shows `Search API key missing.` If no result is found, it shows `No location found. Try a more specific address.`
 
@@ -93,13 +95,13 @@ http://localhost:5173/
 ## Test The App
 
 1. Start the app with `npm run dev`.
-2. Click the map to place a blue selected-location marker.
-3. Or search for a place like `Macomb Community College` in `Search address or place`, then choose a result.
-4. If you clicked the map instead, click `Use this as my starting point`.
+2. Search for a place like `Macomb Community College` in `Search starting address or place`, then choose a result.
+3. Or click the map to use that clicked spot as the starting point.
+4. Confirm that the side panel shows the correct starting point.
 5. Choose a radius in the Route Generator panel.
 6. Choose `20 minutes` or `30 minutes` for the maximum round-trip drive time.
 7. Optional: check `Avoid highways` or `Prefer local roads`.
-8. Click `Generate Round Trip Routes`.
+8. Click `Generate round trip from this starting point`.
 9. Wait for TomTom to return route options within the selected max time.
 10. Hover route cards to preview lines on the map.
 11. Click a route card to select it and zoom the map to that route.
@@ -119,12 +121,13 @@ Use this checklist before saving or pushing a phase:
 - The app opens with `npm run dev`.
 - The map loads and can be moved/zoomed.
 - Searching `Macomb Community College` returns TomTom results.
-- Selecting a TomTom search result sets the starting point and moves the map there.
-- Clicking the map shows a selected starting point.
-- Confirming the starting point enables route generation.
+- Selecting a TomTom search result sets the starting point, clears old routes, and moves the map there.
+- Clicking the map sets that clicked spot as the starting point and clears old routes.
+- The app does not use browser current location unless a future explicit button is added.
 - The maximum round-trip drive time selector offers `20 minutes` and `30 minutes`.
-- `Generate Round Trip Routes` shows a loading message.
+- `Generate round trip from this starting point` shows a loading message.
 - Routes appear on the map and in the route list.
+- Route cards show `Round trip from: [starting place/address]`.
 - Route cards show round-trip time as `X min of Y min max`, plus distance, traffic delay, and destination coordinates.
 - Generated routes stay within the selected maximum time limit.
 - The best quiet route is selected from traffic delay, highway hints, turn count, overlap, and max-time fit.
@@ -161,4 +164,4 @@ npm run build
 
 The project is still intentionally simple and local. It has moved beyond basic route drawing into route-quality cleanup, but it is not a full production traffic-ranking app yet.
 
-Future improvements could include address search, stronger traffic/busy-road scoring, better mobile polish, and TomTom key restrictions before public deployment.
+Future improvements could include stronger traffic/busy-road scoring, better mobile polish, and TomTom key restrictions before public deployment.
